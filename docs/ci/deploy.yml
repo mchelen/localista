@@ -1,0 +1,66 @@
+# Builds the app, compiles the static civic-data API (pipeline/), and
+# deploys both to GitHub Pages. Runs on push to main, on a daily schedule
+# (data refresh), and on demand.
+#
+# One-time repo setup:
+#   Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Optional secrets (Settings → Secrets → Actions) to unlock keyed datasets:
+#   OPENSTATES_API_KEY, CONGRESS_GOV_API_KEY, GOOGLE_CIVIC_API_KEY,
+#   CENSUS_API_KEY. Keys stay in CI — they are never in the client bundle.
+#
+# If a pipeline job fails validation, the workflow fails and the previous
+# deployment (with its last-known-good data) stays live.
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 9 * * *' # daily data refresh (UTC); scheduled runs use main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Compile static civic data
+        env:
+          OPENSTATES_API_KEY: ${{ secrets.OPENSTATES_API_KEY }}
+          CONGRESS_GOV_API_KEY: ${{ secrets.CONGRESS_GOV_API_KEY }}
+          GOOGLE_CIVIC_API_KEY: ${{ secrets.GOOGLE_CIVIC_API_KEY }}
+          CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+        run: npm run pipeline
+      - name: Build app
+        env:
+          # Project Pages serve from /<repo>/; drop this for a custom domain.
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
