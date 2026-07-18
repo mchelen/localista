@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { BillsPanel } from './components/BillsPanel'
 import { DemographicsPanel } from './components/DemographicsPanel'
 import { ElectionsPanel } from './components/ElectionsPanel'
@@ -5,10 +6,18 @@ import { JurisdictionPanel } from './components/JurisdictionPanel'
 import { LocationBar } from './components/LocationBar'
 import { RepsPanel } from './components/RepsPanel'
 import { useLocalista } from './hooks/useLocalista'
+import { formatDate } from './lib/format'
 import { DEMO_LABEL } from './services/demo'
+import { getDataMeta } from './services/staticData'
 
 export default function App() {
   const { state, locate, lookupAddress, loadDemo, reset } = useLocalista()
+  const [dataSnapshot, setDataSnapshot] = useState<string | undefined>()
+  useEffect(() => {
+    void getDataMeta().then((meta) => {
+      if (meta?.generatedAt) setDataSnapshot(meta.generatedAt)
+    })
+  }, [])
   const busy = state.phase === 'locating' || state.phase === 'resolving'
   const showResults = state.phase === 'ready' || state.phase === 'demo'
 
@@ -64,6 +73,9 @@ export default function App() {
       </main>
 
       <footer className="app-footer">
+        {dataSnapshot && (
+          <p>Data snapshot compiled {formatDate(dataSnapshot.slice(0, 10))}.</p>
+        )}
         <p>
           Data: U.S. Census Bureau · unitedstates/congress-legislators · DC Open Data ·
           Open States · Congress.gov · Google Civic Information. Your location is sent

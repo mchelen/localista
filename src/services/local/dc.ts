@@ -1,6 +1,9 @@
 import { pickAttribute, pickLayer, type ArcGisLayerRef } from '../../lib/arcgis'
+import { normalizeDistrict } from '../../lib/districts'
+import type { DcLocalFile } from '../../lib/staticShapes'
 import type { Jurisdiction, LatLng, Representative } from '../../lib/types'
 import { fetchJson } from '../http'
+import { fetchStatic } from '../staticData'
 import type { LocalCivicData, LocalProvider } from './index'
 
 const MAPSERVER =
@@ -89,21 +92,24 @@ async function fetchDc(point: LatLng): Promise<LocalCivicData> {
         name: /smd/i.test(smdId) ? smdId : `SMD ${smdId}`
       })
     }
-    // Commissioner fields on the SMD layer (names drift between vintages).
-    const commissioner = pickAttribute(smd, [
-      /commissioner/i,
-      /rep_?name/i,
-      /member_?name/i,
-      /first_?name/i
-    ])
+    // Commissioner fields on the SMD layer (names drift between vintages),
+    // enriched/backfilled from the precompiled snapshot when available.
+    const snapshot = smdId
+      ? (await fetchStatic<DcLocalFile>('data/local/dc.json'))?.smds[
+          normalizeDistrict(smdId) ?? ''
+        ]
+      : undefined
+    const commissioner =
+      pickAttribute(smd, [/commissioner/i, /rep_?name/i, /member_?name/i, /first_?name/i]) ??
+      snapshot?.commissioner
     if (commissioner) {
       representatives.push({
         level: 'local',
         office: 'ANC Commissioner',
         name: commissioner,
         jurisdiction: smdId ? (/smd/i.test(smdId) ? smdId : `SMD ${smdId}`) : undefined,
-        email: pickAttribute(smd, [/email/i]),
-        phone: pickAttribute(smd, [/phone|voice/i]),
+        email: pickAttribute(smd, [/email/i]) ?? snapshot?.email,
+        phone: pickAttribute(smd, [/phone|voice/i]) ?? snapshot?.phone,
         website: 'https://anc.dc.gov/',
         nextElection:
           'ANC seats are on the DC general-election ballot in even years',

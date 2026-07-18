@@ -34,8 +34,9 @@ export function RepsPanel({ state }: { state: Loadable<Representative[]> }) {
                 ) : (
                   !hasOpenStates && (
                     <p className="note">
-                      Add a free Open States API key in <code>.env.local</code> to see
-                      your state legislators (and DC Council members).
+                      No state-legislator data for this location yet. Deploy the CI
+                      data pipeline snapshots, or add a free Open States API key in{' '}
+                      <code>.env.local</code>.
                     </p>
                   )
                 )}

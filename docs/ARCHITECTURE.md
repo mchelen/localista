@@ -4,27 +4,39 @@ Status: v0.1 (2026-07-18)
 
 ## 1. Overview
 
-Localista MVP is a **client-only single-page app + PWA**. There is no
-Localista backend: the browser talks directly to public civic-data APIs.
-This keeps hosting free/static, keeps the user's location out of any
-Localista-operated server (privacy by architecture), and is viable because
-the baseline data sources are keyless and CORS-enabled.
+Localista is a **client-only single-page app + PWA** fed primarily by a
+**precompiled static data API**. There is no Localista backend: a CI
+pipeline periodically compiles civic data into JSON files deployed
+alongside the app, and the browser reads those (falling back to live
+public APIs). This keeps hosting free/static, keeps the user's location
+out of any Localista-operated server (privacy by architecture), and keeps
+API keys out of the client bundle entirely.
 
 ```
+┌──────────── CI (GitHub Actions, daily cron) ────────────┐
+│  pipeline/  fetches upstream sources (keys = secrets)   │
+│    → public/data/**  partitioned JSON  → GitHub Pages   │
+└─────────────────────────────────────────────────────────┘
+                          │  static hosting (same origin)
 ┌────────────────────────── Browser (PWA) ──────────────────────────┐
 │  UI (React)                                                       │
 │   └─ useLocalista() orchestration hook                            │
-│        └─ Service layer (one adapter per provider)                │
-│             ├─ geocode.ts        Census geocoder (pt → geos)      │
-│             ├─ federal.ts        congress-legislators dataset     │
-│             ├─ openstates.ts     Open States v3 (keyed)           │
-│             ├─ congress.ts       Congress.gov API (keyed)         │
-│             ├─ elections.ts      computed + Google Civic (keyed)  │
-│             ├─ demographics.ts   Census ACS 5-year profile        │
-│             └─ local/dc.ts       DC Open Data (ward/ANC/SMD)      │
-│  Service worker (Workbox): app shell precache + runtime caching   │
+│        └─ Service layer: static /data/* first, live fallback      │
+│             ├─ geocode.ts        Census geocoder (pt → geos) LIVE │
+│             ├─ federal.ts        data/reps/federal/{st}.json     │
+│             ├─ stateReps.ts      data/reps/state/{st}.json       │
+│             ├─ congress.ts       data/bills/us.json              │
+│             ├─ openstates.ts     data/bills/{st}.json            │
+│             ├─ elections.ts      data/elections.json + computed  │
+│             ├─ demographics.ts   data/demographics/{fips}.json   │
+│             └─ local/dc.ts       DC GIS point query LIVE          │
+│  Service worker (Workbox): shell precache + runtime caching       │
 └───────────────────────────────────────────────────────────────────┘
 ```
+
+Only two things stay live by necessity: the point→district geocoder
+lookup and the DC point-in-polygon query — both spatial, per-user, and
+keyless. Everything else is shared data compiled ahead of time.
 
 ## 2. Stack & rationale
 
@@ -92,17 +104,44 @@ renumbers layers between redistricting cycles, so hard-coded layer ids rot.
 Attribute names are also discovered defensively (commissioner name/email
 fields matched by pattern) for the same reason.
 
-## 6. API keys & the proxy question
+## 6. Static data pipeline (pipeline/)
 
-Keys are read from Vite env vars (`.env.local`, see `.env.example`):
-`VITE_OPENSTATES_API_KEY`, `VITE_CONGRESS_GOV_API_KEY`,
-`VITE_GOOGLE_CIVIC_API_KEY`, `VITE_CENSUS_API_KEY` (optional).
+A set of Node jobs (run via `npm run pipeline`, orchestrated by
+`.github/workflows/deploy.yml` on push + daily cron) compiles
+`public/data/**`:
 
-Anything in a client bundle is public. For personal use and low-quota free
-keys this is acceptable; **before a public production launch**, front the
-keyed providers with a thin proxy (Cloudflare Worker / Netlify function)
-that holds the keys, enforces rate limits, and pins CORS to the app origin.
-The service-layer seam makes this a base-URL change, not a refactor.
+| File | Contents | Source | Key |
+|---|---|---|---|
+| `data/reps/federal/{st}.json` | Senators + House by district | congress-legislators | none |
+| `data/reps/state/{st}.json` | Legislators by chamber+district | openstates/people repo (YAML tarball) | none |
+| `data/demographics/{fips}.json` | State + all counties + all places | Census ACS | optional |
+| `data/local/dc.json` | ANC commissioner per SMD | DC Open Data | none |
+| `data/bills/us.json`, `data/bills/{st}.json` | Recent-action snapshots | Congress.gov / Open States | CI secrets |
+| `data/elections.json` | Upcoming elections | Google Civic | CI secret |
+| `data/meta.json` | Run summary + timestamp (shown in app footer) | — | — |
+
+Design points:
+- **District keys are normalized** (`src/lib/districts.ts`) so Census
+  geocoder names and Open States names collide correctly ("State Senate
+  District 21" ≡ "21"; DC "Ward 6" ≡ "6"); values are arrays because some
+  states have multi-member districts. The same module runs at build time
+  (writer) and runtime (reader).
+- **Validation gates**: each job asserts sanity (≥500 members of Congress,
+  ≥7000 state legislators, ≥50 states of demographics, ≥250 DC SMDs). A
+  failed job fails CI, so the previous good deployment stays live —
+  upstream breakage becomes a red workflow, not a broken panel.
+- **Keys live only in CI secrets** (`OPENSTATES_API_KEY`,
+  `CONGRESS_GOV_API_KEY`, `GOOGLE_CIVIC_API_KEY`, `CENSUS_API_KEY`); keyed
+  jobs skip cleanly when unset. The Vite `VITE_*` client-key path still
+  exists as a live-API fallback for local development, but is no longer
+  needed in production — which removes the old "proxy before launch"
+  roadmap item.
+- Data files are **not precached** by the service worker (runtime
+  NetworkFirst instead), so the daily data refresh doesn't invalidate the
+  app-shell precache or force full re-downloads.
+- Freshness is bounded by the cron cadence (daily by default; GitHub cron
+  can drift by minutes to ~an hour). `meta.json`'s timestamp is surfaced
+  in the UI footer as "Data snapshot compiled …".
 
 ## 7. PWA strategy
 
@@ -128,7 +167,8 @@ The service-layer seam makes this a base-URL change, not a refactor.
 
 - Vitest unit tests cover the fragile pure logic: congressional-district
   code parsing (incl. at-large `00`/`98`), federal election-date math,
-  FIPS→state mapping, ArcGIS attribute discovery, ACS row filtering.
+  district-name normalization, Open States YAML→Representative mapping,
+  ArcGIS attribute discovery, ACS row filtering.
 - Network adapters are thin and defensive (every fetch checks `ok`, guards
   shapes, and returns typed errors); integration against live endpoints is
   manual for MVP (see DATA_SOURCES.md verification notes).

@@ -1,19 +1,8 @@
-import { acsNumber, formatCount, formatMoney, formatPercent } from '../lib/format'
-import type { DemographicRow, GeoContext, JurisdictionDemographics } from '../lib/types'
+import { ACS_PROFILE_BASE, ACS_SOURCE, acsRows, acsVarList } from '../lib/acs'
+import type { DemographicsFile } from '../lib/staticShapes'
+import type { GeoContext, JurisdictionDemographics } from '../lib/types'
 import { env, fetchJson } from './http'
-
-const ACS_VINTAGE = '2023'
-const BASE = `https://api.census.gov/data/${ACS_VINTAGE}/acs/acs5/profile`
-const SOURCE = `Census ACS 5-year (${ACS_VINTAGE})`
-
-// Profile variable ids shift between vintages — re-verify on vintage bump.
-const VARS = [
-  { id: 'DP05_0001E', label: 'Population', fmt: formatCount },
-  { id: 'DP05_0018E', label: 'Median age', fmt: (n: number) => n.toLocaleString('en-US') },
-  { id: 'DP03_0062E', label: 'Median household income', fmt: formatMoney },
-  { id: 'DP02_0068PE', label: "Bachelor's degree or higher", fmt: formatPercent },
-  { id: 'DP03_0009PE', label: 'Unemployment rate', fmt: formatPercent }
-] as const
+import { fetchStatic } from './staticData'
 
 async function fetchProfile(
   forClause: string,
@@ -21,38 +10,49 @@ async function fetchProfile(
   level: string
 ): Promise<JurisdictionDemographics | undefined> {
   const key = env('VITE_CENSUS_API_KEY')
-  const params = new URLSearchParams({
-    get: `NAME,${VARS.map((v) => v.id).join(',')}`,
-    for: forClause
-  })
+  const params = new URLSearchParams({ get: `NAME,${acsVarList()}`, for: forClause })
   if (inClause) params.set('in', inClause)
   if (key) params.set('key', key)
 
   // ACS responds as a 2-row array: header row then value row.
-  const data = await fetchJson<string[][]>(`${BASE}?${params.toString()}`)
+  const data = await fetchJson<string[][]>(`${ACS_PROFILE_BASE}?${params.toString()}`)
   if (!Array.isArray(data) || data.length < 2) return undefined
   const [header, values] = data
-  const byName = new Map(header.map((h, i) => [h, values[i]]))
-
-  const rows: DemographicRow[] = []
-  for (const v of VARS) {
-    const n = acsNumber(byName.get(v.id))
-    if (n !== undefined) rows.push({ label: v.label, value: v.fmt(n) })
-  }
+  const rows = acsRows(header, values)
   if (rows.length === 0) return undefined
+  const nameIdx = header.indexOf('NAME')
   return {
-    jurisdictionName: byName.get('NAME') ?? level,
+    jurisdictionName: (nameIdx >= 0 ? values[nameIdx] : undefined) ?? level,
     level,
     rows,
-    source: SOURCE
+    source: ACS_SOURCE
   }
 }
 
-/** Demographic profiles for each enclosing jurisdiction with ACS coverage. */
+/**
+ * Demographic profiles for each enclosing jurisdiction with ACS coverage:
+ * precompiled per-state file first, live ACS API as fallback.
+ */
 export async function getDemographics(
   geo: GeoContext
 ): Promise<JurisdictionDemographics[]> {
   if (!geo.stateFips) throw new Error('State could not be determined.')
+
+  const staticFile = await fetchStatic<DemographicsFile>(
+    `data/demographics/${geo.stateFips}.json`
+  )
+  if (staticFile) {
+    const profiles: JurisdictionDemographics[] = []
+    if (staticFile.state) profiles.push(staticFile.state)
+    if (geo.countyFips && staticFile.counties[geo.countyFips]) {
+      profiles.push(staticFile.counties[geo.countyFips])
+    }
+    if (geo.placeFips && staticFile.places[geo.placeFips]) {
+      profiles.push(staticFile.places[geo.placeFips])
+    }
+    if (profiles.length > 0) return profiles
+  }
+
   const tasks: Promise<JurisdictionDemographics | undefined>[] = [
     fetchProfile(`state:${geo.stateFips}`, undefined, 'State')
   ]

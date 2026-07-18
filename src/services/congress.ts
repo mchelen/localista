@@ -1,23 +1,12 @@
+import { congressBillUrl, type CongressBillRef } from '../lib/billLinks'
+import type { BillsFile } from '../lib/staticShapes'
 import type { Bill } from '../lib/types'
 import { env, fetchJson } from './http'
+import { fetchStatic } from './staticData'
 
 const SOURCE = 'Congress.gov API'
 
-const BILL_TYPE_SLUGS: Record<string, string> = {
-  hr: 'house-bill',
-  s: 'senate-bill',
-  hjres: 'house-joint-resolution',
-  sjres: 'senate-joint-resolution',
-  hconres: 'house-concurrent-resolution',
-  sconres: 'senate-concurrent-resolution',
-  hres: 'house-resolution',
-  sres: 'senate-resolution'
-}
-
-interface CongressBill {
-  congress?: number
-  type?: string
-  number?: string
+interface CongressBill extends CongressBillRef {
   title?: string
   latestAction?: { actionDate?: string; text?: string }
 }
@@ -26,14 +15,14 @@ export function congressGovKey(): string | undefined {
   return env('VITE_CONGRESS_GOV_API_KEY')
 }
 
-export function billUrl(b: CongressBill): string | undefined {
-  const slug = b.type && BILL_TYPE_SLUGS[b.type.toLowerCase()]
-  if (!slug || !b.congress || !b.number) return undefined
-  return `https://www.congress.gov/bill/${b.congress}th-congress/${slug}/${b.number}`
-}
-
-/** Bills in Congress with the most recent actions. */
+/**
+ * Bills in Congress with the most recent actions: precompiled snapshot
+ * first (refreshed by CI, no key in the client), live API as fallback.
+ */
 export async function getFederalBills(): Promise<Bill[]> {
+  const staticFile = await fetchStatic<BillsFile>('data/bills/us.json')
+  if (staticFile && staticFile.bills.length > 0) return staticFile.bills
+
   const key = congressGovKey()
   if (!key) throw new Error('missing-key')
   const url = `https://api.congress.gov/v3/bill?format=json&limit=10&api_key=${key}`
@@ -44,7 +33,7 @@ export async function getFederalBills(): Promise<Bill[]> {
     jurisdiction: 'U.S. Congress',
     lastAction: b.latestAction?.text,
     lastActionDate: b.latestAction?.actionDate,
-    url: billUrl(b),
+    url: congressBillUrl(b),
     source: SOURCE
   }))
 }

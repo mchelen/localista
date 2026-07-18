@@ -1,5 +1,7 @@
+import type { BillsFile } from '../lib/staticShapes'
 import type { Bill, GeoContext, LatLng, Representative } from '../lib/types'
 import { env, fetchJson } from './http'
+import { fetchStatic } from './staticData'
 
 const BASE = 'https://v3.openstates.org'
 const SOURCE = 'Open States (Plural)'
@@ -66,8 +68,18 @@ interface OsBill {
   openstates_url?: string
 }
 
-/** Most recently active bills in the state legislature (or DC Council). */
+/**
+ * Most recently active bills in the state legislature (or DC Council):
+ * precompiled snapshot first, live Open States API as fallback.
+ */
 export async function getStateBills(geo: GeoContext): Promise<Bill[]> {
+  if (geo.stateAbbr) {
+    const staticFile = await fetchStatic<BillsFile>(
+      `data/bills/${geo.stateAbbr.toLowerCase()}.json`
+    )
+    if (staticFile && staticFile.bills.length > 0) return staticFile.bills
+  }
+
   const key = openStatesKey()
   if (!key) throw new Error('missing-key')
   if (!geo.stateName) throw new Error('State could not be determined.')

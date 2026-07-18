@@ -2,7 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages project sites serve from /<repo>/ — CI sets BASE_PATH.
+const base = process.env.BASE_PATH ?? '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -16,7 +20,8 @@ export default defineConfig({
         theme_color: '#1d4ed8',
         background_color: '#f8fafc',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'icons/localista.svg',
@@ -36,8 +41,20 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         runtimeCaching: [
           {
-            // Large, slow-changing roster of Congress members: serve from
-            // cache, refresh daily.
+            // Precompiled static data API (same origin): fresh when online,
+            // last-known-good offline. Not precached — refreshes daily
+            // without invalidating the app shell.
+            urlPattern: /\/data\/.+\.json$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'localista-static-data',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 128, maxAgeSeconds: 60 * 60 * 24 * 30 }
+            }
+          },
+          {
+            // Large, slow-changing roster of Congress members (live
+            // fallback path): serve from cache, refresh daily.
             urlPattern: /^https:\/\/unitedstates\.github\.io\/congress-legislators\//,
             handler: 'CacheFirst',
             options: {
@@ -61,6 +78,6 @@ export default defineConfig({
   ],
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts']
+    include: ['src/**/*.test.ts', 'pipeline/**/*.test.ts']
   }
 } as Parameters<typeof defineConfig>[0])

@@ -21,7 +21,8 @@ import { getElections } from '../services/elections'
 import { getFederalReps } from '../services/federal'
 import { geocodeAddress, resolveJurisdictions } from '../services/geocode'
 import { findLocalProvider } from '../services/local'
-import { getStateBills, getStateReps } from '../services/openstates'
+import { getStateBills } from '../services/openstates'
+import { getStateRepsSmart } from '../services/stateReps'
 
 export interface LocalistaState {
   phase: 'idle' | 'locating' | 'resolving' | 'ready' | 'demo' | 'error'
@@ -108,7 +109,7 @@ export function useLocalista() {
     const [federal, stateReps, local, federalBills, stateBills, elections, demographics] =
       await Promise.allSettled([
         getFederalReps(geo),
-        getStateReps(point),
+        getStateRepsSmart(point, geo),
         localPromise,
         getFederalBills(),
         getStateBills(geo),
@@ -158,7 +159,7 @@ export function useLocalista() {
               ? {
                   status: 'unavailable',
                   reason:
-                    'Add a Congress.gov and/or Open States API key (.env.local) to see bills under consideration.'
+                    'Bill snapshots aren’t deployed yet. Run the CI data pipeline (with Congress.gov / Open States secrets), or add keys to .env.local.'
                 }
               : { status: 'ready', data: [] },
       elections: toLoadable(elections),

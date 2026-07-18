@@ -116,7 +116,9 @@ export async function resolveJurisdictions(point: LatLng): Promise<GeoContext> {
     placeName: place?.NAME,
     cdNumber,
     slduName: sldu?.NAME,
+    slduBase: sldu?.BASENAME,
     sldlName: sldl?.NAME,
+    sldlBase: sldl?.BASENAME,
     jurisdictions
   }
 }

@@ -36,7 +36,9 @@ export interface GeoContext {
   /** Congressional district number; 0 = at-large or non-voting delegate. */
   cdNumber?: number
   slduName?: string
+  slduBase?: string
   sldlName?: string
+  sldlBase?: string
   jurisdictions: Jurisdiction[]
 }
 

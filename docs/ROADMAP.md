@@ -12,18 +12,28 @@
 - Demo mode with bundled DC sample data
 - Unit tests for parsing/date logic
 
+## Phase 0.5 — Static data pipeline ✅ (v0.2)
+- `pipeline/` compiles a static data API (`public/data/**`): federal reps,
+  state legislators (openstates/people, key-free!), demographics, DC ANC
+  commissioners, plus keyed snapshots (bills, elections) via CI secrets
+- `.github/workflows/deploy.yml`: push + daily cron → test → pipeline
+  (with validation gates) → build → GitHub Pages
+- App adapters read static data first with live-API fallbacks; footer
+  shows the snapshot date
+- E2E test of the static path (Playwright, mocked geocoder/geolocation)
+- Consequence: API keys now live only in CI; the old "key-holding proxy
+  before launch" item is obsolete
+
 ## Phase 1 — Harden the baseline
-- Live-verify every endpoint from a browser; fix shape drift (see
-  DATA_SOURCES.md checklist)
+- First real pipeline run in CI: live-verify every upstream endpoint; fix
+  shape drift (see DATA_SOURCES.md checklist); confirm Pages deployment
+- Enable GitHub Pages (Settings → Pages → Source: GitHub Actions) and add
+  the optional data secrets
 - Real PNG icons + richer install experience; Lighthouse PWA pass
-- E2E smoke test (Playwright) with mocked network
-- CI (GitHub Actions): typecheck, unit tests, build
-- Deploy to static hosting (GitHub Pages or Cloudflare Pages)
 
 ## Phase 2 — Depth
-- Thin key-holding proxy (Cloudflare Worker) so keys leave the bundle;
-  origin-pinned CORS + rate limiting
-- Governor + statewide executives (static dataset or Open States people)
+- Governor + statewide executives (openstates/people `executive/` dir —
+  pipeline already downloads it)
 - Bills filtered to *your* legislators' sponsorships; bill search
 - Election detail via Google Civic voterInfo (contests, polling places)
 - Local news/notices module (jurisdiction RSS registry)

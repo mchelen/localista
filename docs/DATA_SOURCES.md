@@ -1,6 +1,13 @@
 # Localista — Data Sources
 
-Status: v0.1 (2026-07-18)
+Status: v0.2 (2026-07-18)
+
+> **v0.2**: most sources below are now consumed **at build time** by the
+> static data pipeline (`pipeline/`, see ARCHITECTURE.md §6) and served to
+> the app as precompiled JSON under `/data/`. The live endpoints remain as
+> runtime fallbacks. New in v0.2: the `openstates/people` GitHub repo
+> (YAML tarball, key-free) replaces the Open States API as the primary
+> source for state legislators.
 
 ## Summary table
 
@@ -9,7 +16,8 @@ Status: v0.1 (2026-07-18)
 | Point → jurisdictions (state, county, place, CD, SLDU/SLDL) | US Census Geocoder | No | Yes | `services/geocode.ts` |
 | Address → point | US Census Geocoder (one-line address) | No | Yes | `services/geocode.ts` |
 | U.S. Senators / Representative (name, party, term, contact) | `unitedstates/congress-legislators` (GitHub Pages JSON) | No | Yes | `services/federal.ts` |
-| State legislators (incl. DC Council) | Open States v3 `people.geo` | **Yes** | Yes | `services/openstates.ts` |
+| State legislators (incl. DC Council) — build time | `openstates/people` repo tarball (YAML) | No | n/a (CI) | `pipeline/stateReps.ts` |
+| State legislators — runtime fallback | Open States v3 `people.geo` | **Yes** | Yes | `services/openstates.ts` |
 | State bills (incl. DC Council) | Open States v3 `bills` | **Yes** | Yes | `services/openstates.ts` |
 | Federal bills (latest actions) | Congress.gov API v3 | **Yes** (free) | Yes | `services/congress.ts` |
 | Upcoming elections (official list) | Google Civic Info `elections` | **Yes** | Yes | `services/elections.ts` |
@@ -75,12 +83,23 @@ Free key signup:
   `outFields=*`). Commissioner name/contact fields on the SMD layer are
   discovered by attribute-name pattern.
 
+### openstates/people (build time)
+- `https://github.com/openstates/people/archive/refs/heads/main.tar.gz`
+- One tarball per pipeline run; `data/{jurisdiction}/legislature/*.yml`
+  parsed into per-state files. Current role = last `upper`/`lower`/
+  `legislature` role with no end date (or a future one). Handles both the
+  newer `offices` and legacy `contact_details` contact schemas.
+
 ## Verification status
 
 ⚠️ The development sandbox's egress policy blocked all civic-data hosts
 (only package registries allowed), so these endpoints were implemented from
-documented schemas + prior knowledge and could not be live-verified in CI.
-Adapters are written defensively (shape guards, per-panel error states).
+documented schemas + prior knowledge and could not be live-verified here.
+Adapters are written defensively (shape guards, per-panel error states),
+and the **pipeline's validation gates double as integration tests**: the
+first GitHub Actions run (runners have normal egress) will exercise every
+build-time endpoint and fail loudly on shape drift. The static-data
+consumption path is E2E-tested with fixtures.
 
 **First-run manual checklist** (open the app in a browser, use a DC address
 like "1600 Pennsylvania Ave NW, Washington, DC" and a non-DC address):

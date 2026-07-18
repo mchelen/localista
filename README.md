@@ -25,14 +25,6 @@ npm install
 npm run dev       # http://localhost:5173
 ```
 
-No API keys are required for the baseline experience (federal reps,
-jurisdictions, DC local data, demographics, computed elections). To unlock
-state legislators, bills, and the official elections list:
-
-```bash
-cp .env.example .env.local   # then fill in free keys — see the file
-```
-
 There's also a built-in **demo mode** ("Try the demo") that uses bundled
 sample data — no location permission or network needed.
 
@@ -40,7 +32,28 @@ sample data — no location permission or network needed.
 npm test          # unit tests (Vitest)
 npm run build     # production build + PWA (dist/)
 npm run preview   # serve the production build
+npm run pipeline  # compile the static data API into public/data/
 ```
+
+## Data: precompiled by CI, no keys in the client
+
+A daily GitHub Actions workflow (`.github/workflows/deploy.yml`) runs
+`pipeline/`, which compiles civic data into a **static JSON API**
+(`public/data/**`) deployed with the app: federal reps per state, all
+~7,400 state legislators (from the open `openstates/people` dataset — no
+key), demographics for every state/county/place, DC ANC commissioners,
+and — when CI secrets are configured — bill and election snapshots.
+Validation gates keep a bad upstream response from replacing good data.
+
+The app reads `/data/` first and falls back to live APIs. Everything works
+with **zero API keys**; for local development against live APIs you can
+still `cp .env.example .env.local` and add keys.
+
+**One-time repo setup for deployment:**
+1. Settings → Pages → Build and deployment → Source: **GitHub Actions**.
+2. (Optional) Add Actions secrets `OPENSTATES_API_KEY`,
+   `CONGRESS_GOV_API_KEY`, `GOOGLE_CIVIC_API_KEY`, `CENSUS_API_KEY` to
+   unlock bill/election snapshots.
 
 ## Documentation
 
@@ -53,12 +66,14 @@ npm run preview   # serve the production build
 
 ## Architecture in one paragraph
 
-Client-only React + TypeScript + Vite PWA — no backend. A single
-orchestration hook resolves a point into jurisdictions (Census geocoder),
-then fans out in parallel to normalized service adapters:
-congress-legislators (federal reps), Open States (state reps + bills,
-keyed), Congress.gov (federal bills, keyed), Google Civic (elections,
-keyed), Census ACS (demographics), and a pluggable **local-provider
-registry** for sub-city bodies (v1: Washington, DC — ward/ANC/SMD via DC
-Open Data). Each panel loads, fails, and caches independently; Workbox
-precaches the shell and serves last-known-good data offline.
+Client-only React + TypeScript + Vite PWA — no backend. A CI pipeline
+compiles a static JSON data API (federal + state reps, demographics, DC
+ANC, bill/election snapshots) deployed with the app on GitHub Pages. In
+the browser, a single orchestration hook resolves a point into
+jurisdictions (Census geocoder — one of only two calls that stay live),
+then fans out to normalized service adapters that read the static data
+first and fall back to live APIs. A pluggable **local-provider registry**
+handles sub-city bodies (v1: Washington, DC — ward/ANC/SMD point lookup
+via DC Open Data, the other live call). Each panel loads, fails, and
+caches independently; Workbox precaches the shell and serves
+last-known-good data offline.
