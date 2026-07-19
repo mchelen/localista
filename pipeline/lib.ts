@@ -36,7 +36,16 @@ export async function fetchJson<T>(
         throw new Error(`retryable: HTTP ${res.status}`)
       }
       if (!res.ok) throw new Error(`HTTP ${res.status} from ${new URL(url).hostname}`)
-      return (await res.json()) as T
+      const text = await res.text()
+      try {
+        return JSON.parse(text) as T
+      } catch {
+        // Some APIs answer errors as HTML/text with a 200 — surface a
+        // snippet so upstream drift is diagnosable from CI logs.
+        throw new Error(
+          `non-JSON from ${new URL(url).hostname}: ${text.slice(0, 120).replace(/\s+/g, ' ')}`
+        )
+      }
     } catch (err) {
       lastError = err
       const retryable =

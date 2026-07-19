@@ -10,6 +10,12 @@ const VARIABLES = {
     label:
       'Estimate!!INCOME AND BENEFITS (IN 2023 INFLATION-ADJUSTED DOLLARS)!!Total households!!Median household income (dollars)'
   },
+  // Puerto Rico-specific twin table: identical label, sorts BEFORE the
+  // canonical id (ASCII 'P' < '_') and must not be selected.
+  DP02PR_0071PE: {
+    label:
+      "Percent!!EDUCATIONAL ATTAINMENT!!Population 25 years and over!!Bachelor's degree or higher"
+  },
   DP02_0071PE: {
     label:
       "Percent!!EDUCATIONAL ATTAINMENT!!Population 25 years and over!!Bachelor's degree or higher"
@@ -28,6 +34,17 @@ describe('pickAcsVariable', () => {
       'DP03_0063E'
     )
     expect(pickAcsVariable(VARIABLES, byLabel("Bachelor's degree or higher"))).toBe(
+      'DP02_0071PE'
+    )
+  })
+
+  it('prefers canonical tables over PR-specific variants', () => {
+    // Direct regression test for the run-#2 failure: DP02PR must lose.
+    const prOnly = {
+      DP02PR_0071PE: VARIABLES.DP02PR_0071PE,
+      DP02_0071PE: VARIABLES.DP02_0071PE
+    }
+    expect(pickAcsVariable(prOnly, byLabel("Bachelor's degree or higher"))).toBe(
       'DP02_0071PE'
     )
   })

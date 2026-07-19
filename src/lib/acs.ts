@@ -88,7 +88,10 @@ export function pickAcsVariable(
     )
     .map(([id]) => id)
     .sort()
-  return matches[0] ?? metric.id
+  // Prefer canonical tables (DP02_...) over jurisdiction-specific variants
+  // (DP02PR_... exists only for Puerto Rico and breaks queries elsewhere).
+  const canonical = matches.filter((id) => /^DP\d+_\d+P?E$/.test(id))
+  return canonical[0] ?? matches[0] ?? metric.id
 }
 
 /**
