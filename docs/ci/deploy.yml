@@ -48,10 +48,15 @@ jobs:
           GOOGLE_CIVIC_API_KEY: ${{ secrets.GOOGLE_CIVIC_API_KEY }}
           CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
         run: npm run pipeline
+      # continue-on-error: on user-account repos GitHub refuses to let the
+      # workflow token CREATE the Pages site ("Resource not accessible by
+      # integration") until Pages is enabled once in Settings. Don't let
+      # that abort the build — only the deploy job needs Pages to exist.
       - name: Enable and configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
+        continue-on-error: true
       - name: Build app
         env:
           # Project Pages serve from /<repo>/; drop this for a custom domain.
