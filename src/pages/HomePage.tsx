@@ -1,15 +1,31 @@
-import { pageHref } from '../components/SiteChrome'
-import { BillsPanel } from '../components/BillsPanel'
-import { DemographicsPanel } from '../components/DemographicsPanel'
-import { ElectionsPanel } from '../components/ElectionsPanel'
 import { JurisdictionPanel } from '../components/JurisdictionPanel'
-import { KeyOfficialsPanel } from '../components/KeyOfficialsPanel'
+import { LevelSections } from '../components/LevelSections'
 import { LocationBar } from '../components/LocationBar'
 import { MapPanel } from '../components/MapPanel'
-import { RepsPanel } from '../components/RepsPanel'
-import { ServicesPanel } from '../components/ServicesPanel'
+import { pageHref } from '../components/SiteChrome'
 import { useLocalista } from '../hooks/useLocalista'
+import { classifyJurisdiction, LEVEL_ORDER } from '../lib/civicLevels'
+import { levelSection, SECTIONS } from '../lib/sections'
+import type { GeoContext } from '../lib/types'
 import { DEMO_LABEL } from '../services/demo'
+
+/** Chips to every section this location resolves to, most local first. */
+function JumpNav({ geo }: { geo: GeoContext }) {
+  const levels = LEVEL_ORDER.filter((level) =>
+    geo.jurisdictions.some((j) => classifyJurisdiction(j, geo) === level)
+  )
+  const targets = [SECTIONS.where, SECTIONS.map, ...levels.map(levelSection)]
+  return (
+    <nav className="jump-nav" aria-label="Jump to section">
+      {targets.map((t) => (
+        <a className={`jump-chip panel-tint-${t.tint}`} href={`#${t.id}`} key={t.id}>
+          <span aria-hidden="true">{t.icon} </span>
+          {t.short}
+        </a>
+      ))}
+    </nav>
+  )
+}
 
 export function HomePage() {
   const { state, locate, lookupAddress, loadDemo, reset } = useLocalista()
@@ -35,7 +51,8 @@ export function HomePage() {
             Localista never stores your location — it’s used once, in your browser, to
             look up your districts, then discarded. Start with the button above, type
             an address, or try the demo. New here? Read the{' '}
-            <a href={pageHref('blog/')}>introduction</a> or the <a href={pageHref('help/')}>help guide</a>.
+            <a href={pageHref('blog/')}>introduction</a> or the{' '}
+            <a href={pageHref('help/')}>help guide</a>.
           </p>
         )}
         {state.phase === 'locating' && <p className="status">Getting your location…</p>}
@@ -54,16 +71,14 @@ export function HomePage() {
 
         {showResults && state.geo && (
           <>
-            {/* Order per docs/UX_DESIGN.md §6: orientation → power → tasks
-                → reference → decisions → timing → context. */}
+            <JumpNav geo={state.geo} />
+            {/* Orientation first (where + map), then one section per level
+                of government, most local → least local, each bundling that
+                level's reps, services, bills, elections, and facts
+                (docs/UX_DESIGN.md §6). */}
             <JurisdictionPanel geo={state.geo} />
             <MapPanel geo={state.geo} />
-            <KeyOfficialsPanel state={state.reps} geo={state.geo} />
-            <ServicesPanel state={state.resources} />
-            <RepsPanel state={state.reps} geo={state.geo} />
-            <BillsPanel state={state.bills} />
-            <ElectionsPanel state={state.elections} />
-            <DemographicsPanel state={state.demographics} />
+            <LevelSections state={state} geo={state.geo} />
           </>
         )}
       </main>

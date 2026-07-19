@@ -39,39 +39,51 @@ export function SiteChrome({
   return (
     <div className="app">
       <header className="app-header">
-        <h1>
-          <a href={pageHref('')} className="brand">
-            <span aria-hidden="true">🏛️ </span>Localista
-          </a>
-        </h1>
-        <nav className="site-nav" aria-label="Site">
-          {NAV.map((item) => (
-            <a
-              key={item.page || 'home'}
-              href={pageHref(item.page)}
-              aria-current={active === item.page ? 'page' : undefined}
-            >
-              {item.label}
+        <div className="app-header-inner">
+          <h1>
+            <a href={pageHref('')} className="brand">
+              <img
+                className="brand-mark"
+                src={`${import.meta.env.BASE_URL}icons/localista.svg`}
+                alt=""
+                width="30"
+                height="30"
+              />
+              Localista
             </a>
-          ))}
-        </nav>
+          </h1>
+          <nav className="site-nav" aria-label="Site">
+            {NAV.map((item) => (
+              <a
+                key={item.page || 'home'}
+                href={pageHref(item.page)}
+                aria-current={active === item.page ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
       </header>
 
-      {children}
+      <div className="app-body">{children}</div>
 
       <footer className="app-footer">
-        {footerExtra}
-        <p>
-          Data: U.S. Census Bureau · unitedstates/congress-legislators · DC Open Data ·
-          Open States · Congress.gov · Google Civic Information · OpenStreetMap (map
-          tiles). Your location is sent only to these providers to answer your query,
-          and never stored by Localista.
-        </p>
-        <p>
-          <a href={pageHref('blog/')}>Why Localista</a> ·{' '}
-          <a href={pageHref('help/')}>Help</a> · <a href={pageHref('faq/')}>FAQ</a> ·{' '}
-          <a href={pageHref('about/')}>About</a>
-        </p>
+        <div className="app-footer-inner">
+          <p className="footer-links">
+            <a href={pageHref('blog/')}>Why Localista</a>
+            <a href={pageHref('help/')}>Help</a>
+            <a href={pageHref('faq/')}>FAQ</a>
+            <a href={pageHref('about/')}>About</a>
+          </p>
+          {footerExtra}
+          <p>
+            Data: U.S. Census Bureau · unitedstates/congress-legislators · DC Open Data ·
+            Open States · Congress.gov · Google Civic Information · OpenStreetMap (map
+            tiles). Your location is sent only to these providers to answer your query,
+            and never stored by Localista.
+          </p>
+        </div>
       </footer>
     </div>
   )

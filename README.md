@@ -1,7 +1,10 @@
 # 🏛️ Localista
 
 Hyperlocal civic information as a website + installable PWA. Localista uses
-your current location (or a typed address) to show:
+your current location (or a typed address) to show, **organized by level of
+government from most local to least local** (your neighborhood → city →
+county → state → federal, each with its representatives, services, bills,
+elections, and facts together):
 
 - **Where you are** — your full civic address: state, county, city,
   congressional district, state legislative districts, and in DC your ward,

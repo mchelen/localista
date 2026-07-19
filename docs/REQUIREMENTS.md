@@ -76,8 +76,9 @@ These are the originating requirements, captured verbatim in intent:
   (e.g. DC: mayor + the user's ward councilmember first). v1: curated tier
   heuristic; v2: metric-driven (news coverage / attention volume — see
   UX_DESIGN.md §2).
-- FR-8.2 A highlighted "Most impactful for you" section precedes the
-  complete grouped list.
+- FR-8.2 Salience orders the representative cards *within* each level
+  section (the locality-first page order of FR-11.2 supersedes the v0.1
+  cross-level "Most impactful for you" panel).
 
 ### FR-9 Drill-down
 - FR-9.1 An official's card can expand to show the top officials of their
@@ -96,9 +97,20 @@ These are the originating requirements, captured verbatim in intent:
 
 ### FR-11 UX / information architecture
 - FR-11.1 The interface follows the IA and interaction principles in
-  docs/UX_DESIGN.md (progressive disclosure, salience-first ordering,
-  provenance on every card, native disclosure semantics, mobile-first
-  action targets).
+  docs/UX_DESIGN.md (progressive disclosure, provenance on every card,
+  native disclosure semantics, mobile-first action targets).
+- FR-11.2 **Locality-first sections** (product-owner direction,
+  2026-07-19): after the orientation panels (civic address, map), results
+  are organized as one section per level of government sorted most local
+  → least local (neighborhood → city → county → state → federal), and
+  each section bundles that level's representatives, services, bills,
+  next elections, and demographic facts — so a user viewing city services
+  also sees the city's rep and when that level next votes
+  (UX_DESIGN.md §6).
+- FR-11.3 A consistent visual identity system (section glyph + tint,
+  category glyphs, level-tinted avatars, party dot-badges, jump-nav
+  chips) aids recognition and navigation; color is never the sole
+  carrier of meaning (UX_DESIGN.md §7).
 
 ### FR-6 PWA
 - FR-6.1 Installable (web manifest, icons, standalone display).

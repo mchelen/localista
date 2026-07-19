@@ -29,44 +29,40 @@ export function HelpPage() {
       </ul>
 
       <h3>Reading the results</h3>
+      <p>
+        Results open with two orientation panels, then one section per level of
+        government, sorted <strong>most local to least local</strong> — because the
+        closer a government is, the more it shapes daily life:
+      </p>
       <ul>
         <li>
-          <strong>Where you are</strong> — your “civic address”: every jurisdiction
-          containing your location, from country down to (in DC) ward, ANC, and
-          Single Member District.
+          <strong>📍 Where you are</strong> — your “civic address”: every
+          jurisdiction containing your location, from country down to (in DC) ward,
+          ANC, and Single Member District.
         </li>
         <li>
-          <strong>Map</strong> — your location on an OpenStreetMap map with your
-          district boundaries outlined (city, congressional district, and — in DC —
-          ward and Single Member District by default). Use the legend checkboxes to
-          show or hide each boundary, including state, county, and state
-          legislative districts.
+          <strong>🗺️ Map</strong> — your location on an OpenStreetMap map with your
+          district boundaries outlined. Use the legend checkboxes to show or hide
+          each boundary, from state down to (in DC) Single Member District.
         </li>
         <li>
-          <strong>Your elected representatives</strong> — grouped Federal / State /
-          Hyperlocal. Each card shows the office and district, party, current term
-          dates, next election for the seat, and contact links (phone, email,
-          website, contact form).
-        </li>
-        <li>
-          <strong>Bills &amp; measures</strong> — recent legislative activity in
-          Congress and your state legislature (or DC Council), each linking to the
-          official bill page.
-        </li>
-        <li>
-          <strong>Upcoming elections</strong> — election dates relevant to your
-          state, from official lists when available; at minimum the computed next
-          federal general election.
-        </li>
-        <li>
-          <strong>About your jurisdictions</strong> — U.S. Census facts (population,
-          median age, income, education, unemployment) for your state, county, and
-          city.
+          <strong>🏘️ Your neighborhood → 🏙️ city → 🏞️ county → 🏛️ state → 🇺🇸
+          federal</strong> — each level’s section gathers everything about that
+          government in one place: its <em>representatives</em> (with party, term,
+          the seat’s next election, and contact links), the <em>services</em> it
+          offers you, the <em>bills</em> it’s considering, its upcoming{' '}
+          <em>elections</em>, and Census <em>facts &amp; figures</em>. So while
+          you’re looking at city services, the city’s elected officials and the
+          city’s next election date are right beside them.
         </li>
       </ul>
       <p>
-        Every panel names its data source, and the footer shows when the data
-        snapshot was compiled.
+        The chip row at the top of results jumps to any section. Sections only
+        appear when your location resolves to that level and it has something to
+        show (outside DC there is no “neighborhood” government layer yet, for
+        example — and in DC, city and state powers are the same government, so
+        they share one section). Every card names its data source, and the footer
+        shows when the data snapshot was compiled.
       </p>
 
       <h3>Installing Localista as an app</h3>
