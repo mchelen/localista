@@ -71,6 +71,35 @@ These are the originating requirements, captured verbatim in intent:
 - FR-5.2 Show the user's full "civic address": state → county → city → ward →
   ANC/SMD (where applicable), with district identifiers.
 
+### FR-8 Salience ("who matters most here")
+- FR-8.1 Rank/present representatives by practical impact, not just level
+  (e.g. DC: mayor + the user's ward councilmember first). v1: curated tier
+  heuristic; v2: metric-driven (news coverage / attention volume — see
+  UX_DESIGN.md §2).
+- FR-8.2 A highlighted "Most impactful for you" section precedes the
+  complete grouped list.
+
+### FR-9 Drill-down
+- FR-9.1 An official's card can expand to show the top officials of their
+  administration (title, agency website, contact), e.g. mayor → city
+  administrator + key agencies. Depth 1; deeper via official sites.
+- FR-9.2 Every official/administration entry carries website and contact
+  info where available (see FR-2.4).
+
+### FR-10 Local services & resources
+- FR-10.1 Show the civic services most relevant to the user's location
+  (DC: 311, DMV, Board of Elections, DPW, DC.gov; national defaults
+  elsewhere: USA.gov, vote.gov).
+- FR-10.2 Entries are task-oriented ("use this when…"), curated per
+  jurisdiction via the local-provider registry (curation policy:
+  UX_DESIGN.md §5).
+
+### FR-11 UX / information architecture
+- FR-11.1 The interface follows the IA and interaction principles in
+  docs/UX_DESIGN.md (progressive disclosure, salience-first ordering,
+  provenance on every card, native disclosure semantics, mobile-first
+  action targets).
+
 ### FR-6 PWA
 - FR-6.1 Installable (web manifest, icons, standalone display).
 - FR-6.2 Works offline for the app shell; previously fetched civic data is

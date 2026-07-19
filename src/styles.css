@@ -396,6 +396,83 @@ a {
   font-size: 0.8rem;
 }
 
+/* ---------- Key officials, services, drill-down ---------- */
+
+.key-panel {
+  border-left: 4px solid var(--accent);
+}
+
+.key-panel > .muted {
+  margin: -0.4rem 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+}
+
+.resource-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.resource-card:hover {
+  border-color: var(--accent);
+}
+
+.resource-label {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.resource-desc {
+  font-size: 0.85rem;
+}
+
+.resource-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-details {
+  margin-top: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.admin-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0 0 0 0.25rem;
+}
+
+.admin-list li {
+  padding: 0.18rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.admin-list li:last-child {
+  border-bottom: none;
+}
+
+.admin-name,
+.admin-phone {
+  color: var(--muted);
+}
+
 /* ---------- Content pages (blog, help, FAQ, about) ---------- */
 
 .page {

@@ -2,8 +2,10 @@ import { BillsPanel } from '../components/BillsPanel'
 import { DemographicsPanel } from '../components/DemographicsPanel'
 import { ElectionsPanel } from '../components/ElectionsPanel'
 import { JurisdictionPanel } from '../components/JurisdictionPanel'
+import { KeyOfficialsPanel } from '../components/KeyOfficialsPanel'
 import { LocationBar } from '../components/LocationBar'
 import { RepsPanel } from '../components/RepsPanel'
+import { ServicesPanel } from '../components/ServicesPanel'
 import { useLocalista } from '../hooks/useLocalista'
 import { DEMO_LABEL } from '../services/demo'
 
@@ -50,8 +52,12 @@ export function HomePage() {
 
         {showResults && state.geo && (
           <>
+            {/* Order per docs/UX_DESIGN.md §6: orientation → power → tasks
+                → reference → decisions → timing → context. */}
             <JurisdictionPanel geo={state.geo} />
-            <RepsPanel state={state.reps} />
+            <KeyOfficialsPanel state={state.reps} geo={state.geo} />
+            <ServicesPanel state={state.resources} />
+            <RepsPanel state={state.reps} geo={state.geo} />
             <BillsPanel state={state.bills} />
             <ElectionsPanel state={state.elections} />
             <DemographicsPanel state={state.demographics} />

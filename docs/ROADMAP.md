@@ -31,7 +31,18 @@
   the optional data secrets
 - Real PNG icons + richer install experience; Lighthouse PWA pass
 
+## Phase 1.5 — Salience, drill-down, services (v0.3) ✅ first slice
+- Curated salience tiers + "Most impactful for you" section (UX_DESIGN §2)
+- Official → administration drill-down (v1: DC mayor/AG, curated)
+- "Local services & resources" panel (v1: DC + national defaults)
+- docs/UX_DESIGN.md: IA principles, salience model, curation policy
+
 ## Phase 2 — Depth
+- Metric-driven salience in the pipeline (Wikipedia pageviews + GDELT news
+  mentions, both keyless — UX_DESIGN.md §2 v2)
+- Link-check pipeline job for curated data (URL rot fails CI visibly)
+- State-level services registry (portals, DMVs, election offices) +
+  contribution guide
 - Governor + statewide executives (openstates/people `executive/` dir —
   pipeline already downloads it)
 - Bills filtered to *your* legislators' sponsorships; bill search
