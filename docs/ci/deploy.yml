@@ -41,26 +41,30 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # continue-on-error: on user-account repos GitHub refuses to let the
+      # workflow token CREATE the Pages site ("Resource not accessible by
+      # integration") until Pages is enabled once in Settings. Don't let
+      # that abort the build — only the deploy job needs Pages to exist.
+      - name: Enable and configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+        continue-on-error: true
       - name: Compile static civic data
         env:
           OPENSTATES_API_KEY: ${{ secrets.OPENSTATES_API_KEY }}
           CONGRESS_GOV_API_KEY: ${{ secrets.CONGRESS_GOV_API_KEY }}
           GOOGLE_CIVIC_API_KEY: ${{ secrets.GOOGLE_CIVIC_API_KEY }}
           CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+          # Where the currently deployed data lives (carry-forward source).
+          PREVIOUS_DATA_URL: ${{ steps.pages.outputs.base_url }}
         run: npm run pipeline
-      # continue-on-error: on user-account repos GitHub refuses to let the
-      # workflow token CREATE the Pages site ("Resource not accessible by
-      # integration") until Pages is enabled once in Settings. Don't let
-      # that abort the build — only the deploy job needs Pages to exist.
-      - name: Enable and configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-        continue-on-error: true
       - name: Build app
         env:
-          # Project Pages serve from /<repo>/; drop this for a custom domain.
-          BASE_PATH: /${{ github.event.repository.name }}/
+          # Serve path assigned by Pages (handles custom domains and
+          # project paths alike), e.g. "/localista/" or "/".
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
         run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
