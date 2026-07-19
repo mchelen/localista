@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type * as LeafletNs from 'leaflet'
 import { BOUNDARY_COLORS, isDefaultVisible } from '../lib/boundaries'
+import { SECTIONS } from '../lib/sections'
+import { PanelHeading } from './Panel'
 import type { GeoContext, JurisdictionKind } from '../lib/types'
 import { getBoundaries, type Boundary } from '../services/boundaries'
 
@@ -127,8 +129,10 @@ export function MapPanel({ geo }: { geo: GeoContext }) {
   }, [])
 
   return (
-    <section className="panel">
-      <h2>Map</h2>
+    <section className="panel" id={SECTIONS.map.id}>
+      <PanelHeading icon={SECTIONS.map.icon} tint={SECTIONS.map.tint}>
+        Map
+      </PanelHeading>
       <div ref={containerRef} className="map-canvas" role="application" aria-label="Map of your location and district boundaries" />
       {boundaries.length > 0 && (
         <fieldset className="map-legend">

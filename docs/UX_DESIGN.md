@@ -1,41 +1,50 @@
 # Localista — UX & Information Architecture
 
-Status: v0.1 (2026-07-19) — captures product-owner direction on salience,
-drill-down, and local services.
+Status: v0.2 (2026-07-19) — v0.1 captured product-owner direction on
+salience, drill-down, and local services; v0.2 adds the **locality-first
+information architecture** and the **visual design system**.
 
 ## 1. Design principles
 
-1. **Answer the user's real question first.** People don't ask "list every
-   jurisdiction I'm in"; they ask *"who actually affects my life here, and
-   how do I reach them?"* The interface leads with the most impactful
-   officials and services for this location, with the complete reference
-   list one step below.
-2. **Progressive disclosure.** Start shallow (a card), let the user drill
-   down (an administration, an agency, a bill) on demand. Never make the
-   first screen pay the cost of the tenth click. Disclosure widgets use
-   native semantics (`<details>`) so keyboard/screen-reader behavior is
-   free and correct.
-3. **Organize by proximity, order by salience.** Grouping follows civic
-   proximity (hyperlocal → city → state → federal) because that's the
-   user's mental model of "levels"; ordering *within the page* follows
-   salience (see §2) because proximity ≠ impact.
+1. **Locality first.** Sections are sorted **most local → least local**
+   (neighborhood → city → county → state → federal). The more local a
+   government is, the more directly it touches daily life — and the less
+   likely the user already knows who runs it.
+2. **Bundle by level, not by content type.** Product-owner direction
+   (2026-07-19): *each level's section shows everything relevant to that
+   level together* — its representatives, its services, its bills, its
+   next elections, its facts. A user looking at city services sees the
+   city's rep beside them, and when that level of government next holds
+   an election. (v0.1 grouped by content type — a reps panel, a bills
+   panel… — which made users reassemble the picture themselves.)
+3. **Progressive disclosure.** Start shallow (a card), let the user drill
+   down (an administration, an agency, a bill) on demand. Disclosure
+   widgets use native semantics (`<details>`).
 4. **Recognition over recall.** Every entity is a self-describing card:
-   who, what office, where, term, next election, and actions (call, email,
-   website) — no code names, no abbreviations without expansion (ANC is
-   always introduced as "Advisory Neighborhood Commission").
-5. **Every fact carries provenance and freshness.** Source label per card,
-   snapshot date in the footer. Curated data (see §5) is visibly marked.
+   who, what office, where, term, next election, and actions (call,
+   email, website). Icons, tints, and badges (§7) exist to make sections
+   and levels recognizable at a glance, never as the sole carrier of
+   meaning.
+5. **Every fact carries provenance and freshness.** Source label per
+   card, snapshot date in the footer. Curated data (§5) is visibly
+   marked.
 6. **Mobile-first, action-first.** Contact actions are tap targets
-   (`tel:`, `mailto:`), not decorative text. One-column flow, cards sized
-   for thumbs.
-7. **Graceful degradation is part of the design**, not an error state:
-   a missing dataset renders as an explanatory note in place.
+   (`tel:`, `mailto:`); one-column flow on phones; desktop widens cards
+   into grids rather than adding sidebars.
+7. **Graceful degradation is part of the design**, not an error state: a
+   missing dataset renders as a note (collected once in "data notes", not
+   repeated per section); a level with nothing to show renders no
+   section.
 
 ## 2. Salience model — "who matters most here?"
 
-Product direction: surface the officials with the most practical impact on
-the user's daily life (e.g. in DC: the mayor and the user's ward
-councilmember), not just a flat list.
+Surface the officials with the most practical impact on the user's daily
+life. In the locality-first IA (v0.2), salience no longer creates its own
+"Most impactful" section — the page order already puts the most local
+(and usually most overlooked) governments on top. Instead, salience
+**orders the cards within each level's section** (`bySalience`), so the
+mayor leads the city section and the user's own ward councilmember
+outranks at-large members.
 
 ### v1: curated tier heuristic (`src/lib/salience.ts`)
 
@@ -44,10 +53,6 @@ councilmember), not just a flat list.
 | 1 — Key officials | Direct executive power or district-specific legislative power over the user's daily services | Mayor; DC Attorney General; the councilmember for *your* ward; governor |
 | 2 — High relevance | Votes on laws that bind the user; citywide seats | U.S. House member/delegate; senators; at-large + chairman councilmembers |
 | 3 — Reference | Everyone else the user can elect | State legislators; ANC commissioner (very local, advisory power) |
-
-Tier 1 renders in a highlighted **"Most impactful for you"** section at the
-top of results; the grouped complete list follows (deduplicated — key
-officials don't repeat below).
 
 ### v2 (roadmap): metric-driven salience
 
@@ -83,24 +88,22 @@ Rules:
 
 ## 4. Local services & resources
 
-Product direction: given the user's location, show the civic resources
-they most plausibly need (DC → 311 for service requests, DMV for licenses,
-DCBOE for voting…).
+Given the user's location, show the civic resources they most plausibly
+need — **inside the level section they belong to** (311/DMV in the city
+section, vote.gov/USA.gov in the federal section, "Your ANC" in the
+neighborhood section).
 
-**"Local services & resources" panel**, populated from a registry:
+Registry as before:
 - **National defaults** (always): USA.gov, vote.gov, congress.gov.
 - **Per-jurisdiction curated entries** via the local-provider registry
   (v1: DC — 311, DMV, Board of Elections, DC.gov, DPW collections,
   anc.dc.gov). Each entry: label, one-line "use this when…" description,
   URL, phone where a phone is the natural channel (311).
-- Selection principle: the top ~6 tasks residents actually do —
-  report/request (311), identity & vehicles (DMV), vote (election board),
-  trash/recycling, find law/agency (portal) — not a directory dump.
-  A "More…" link points to the jurisdiction's own directory.
+- Selection principle: the top ~6 tasks residents actually do, not a
+  directory dump. A "More…" link points to the jurisdiction's own
+  directory.
 
-Roadmap: state-level registry (50 portals + DMVs + election offices is a
-finite curation task well-suited to the pipeline + a community
-contribution guide).
+Roadmap: state-level registry (50 portals + DMVs + election offices).
 
 ## 5. Curation policy
 
@@ -112,21 +115,81 @@ service URLs). These live in versioned curated modules
 - PR review as the update mechanism; a pipeline validation job (roadmap)
   link-checks curated URLs so rot fails CI visibly.
 
-## 6. Page-level information architecture
+## 6. Page-level information architecture (v0.2, locality-first)
 
 ```
-Header (brand, nav)
+Sticky header (logo, wordmark, site nav)
 └─ Location input (act → results)
-   1. Where you are          — orientation: the user's civic address
-   2. Most impactful for you — tier-1 officials (salience §2) + drill-downs
-   3. Local services         — the "do something now" layer (§4)
-   4. All your representatives — complete reference, grouped by proximity
-   5. Bills & measures       — what's being decided
-   6. Upcoming elections     — when you can act next
-   7. About your jurisdictions — context/demographics
+   Jump nav — one tinted chip per section below (anchor links)
+   0. Where you are   📍  orientation: the full civic address
+   1. Map             🗺️  orientation: the point + district boundaries
+   2. Your neighborhood 🏘️  (when resolved, e.g. DC ANC/SMD)
+   3. Your city         🏙️
+   4. Your county       🏞️  (when it has data; often facts only)
+   5. Your state        🏛️
+   6. Federal           🇺🇸
+   Data notes — unavailable/error datasets, reported once
 ```
 
-Rationale for the order: orientation → people with power over you →
-things you can get done today → complete civics reference → time-based
-actions. Sections 2–3 answer "what should I know/do *now*"; 4–7 reward
-deeper engagement. Each panel is independently loadable/failable (NFR-3).
+Each level section contains, in order, whichever of these have content:
+
+```
+District chips   — the user's districts at this level (Ward 6, ANC 6B…)
+👥 Representatives    — cards, salience-ordered (§2)
+🧰 Services & resources
+📜 Bills & measures
+🗳️ Next elections     — when this level of government votes next
+📊 Facts & figures    — ACS demographics for this jurisdiction
+```
+
+Classification lives in `src/lib/civicLevels.ts` (pure, unit-tested).
+Special cases, encoded there:
+- **DC**: the District's government holds city + state (+ the vestigial
+  county) powers, so state- and county-classified data folds into the
+  city section, subtitled to explain why.
+- Congressional districts belong to the **federal** section (they elect
+  federal representation), even though they're drawn within a state.
+- Levels the geocoder didn't resolve (no ANC outside DC) or with nothing
+  to show render no section, and no jump chip.
+
+Rationale: orientation first, then power ordered by proximity to the
+user's front door. Within a level, order runs people → tasks → decisions
+→ timing → context. Every dataset is still independently loadable and
+failable (NFR-3); failures collect in one "data notes" strip instead of
+littering every section.
+
+## 7. Visual design system
+
+Goal: graphics carry wayfinding. Users should be able to answer "what am
+I looking at, and what level of government is this?" from shape and color
+before reading a word.
+
+- **Design tokens** (`src/styles.css` `:root`): surfaces, text, borders,
+  radii, shadows — each with a dark-mode value under
+  `prefers-color-scheme` (the whole system is theme-aware).
+- **Section identity**: every section has an emoji glyph in a tinted
+  rounded chip + a tint color (`SECTIONS` in `src/lib/sections.ts`). The
+  same glyph + tint appear in the section header and its jump chip, so
+  the chip row doubles as a legend for the page.
+- **Jump nav**: tinted anchor chips after location resolution — the page
+  map for a long scroll; horizontally scrollable on phones; sections use
+  `scroll-margin-top` so the sticky header never covers a target.
+- **Category glyphs** (`CATEGORY`): 👥 reps, 🧰 services, 📜 bills, 🗳️
+  elections, 📊 facts — repeated identically in *every* level section so
+  the sub-structure is learn-once.
+- **Level color coding**: representative avatars (initials, used whenever
+  no photo exists) are tinted by government level (federal indigo, state
+  violet, local green) — a second, redundant cue for level.
+- **Party affiliation**: a small dot-badge (D blue, R red, other
+  neutral) — color plus text, never color alone.
+- **Brand**: the pin-over-columns logo (`public/icons/localista.svg`)
+  anchors the sticky header; the same mark is the PWA icon and favicon,
+  so the installed app and the tab are recognizably the same thing.
+- **Responsive rules**: one column on phones (cards full-width, chip rows
+  scroll horizontally, location controls form a 2×2 grid); on desktop the
+  container widens to 64rem and card collections become `auto-fill`
+  grids (reps ≥17rem, resources ≥15rem, facts ≥16rem); the map grows
+  from 300px to 420px tall. No sidebars — reading order is identical at
+  every width.
+- **Motion**: none beyond hover/focus transitions and smooth anchor
+  scrolling; `focus-visible` outlines everywhere.

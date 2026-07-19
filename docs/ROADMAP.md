@@ -47,6 +47,19 @@
 - "Local services & resources" panel (v1: DC + national defaults)
 - docs/UX_DESIGN.md: IA principles, salience model, curation policy
 
+## Phase 1.6 — Locality-first IA + visual design system (v0.4) ✅
+- Results reorganized per product-owner direction: one section per level
+  of government, most local → least local (neighborhood → city → county →
+  state → federal), each bundling that level's reps, services, bills,
+  next elections, and facts (`src/lib/civicLevels.ts`, UX_DESIGN §6);
+  salience now orders cards *within* a level; DC's state/county powers
+  fold into its city section
+- Visual design system (UX_DESIGN §7): design tokens with dark mode,
+  sticky branded header (SVG logo lockup), section glyph+tint identity,
+  jump-nav chips, category glyphs, level-tinted initials avatars, party
+  dot-badges, responsive rules (mobile 2×2 location grid + scrollable
+  chip rows; desktop 64rem container, card grids, 420px map)
+
 ## Phase 2 — Depth
 - ✅ Map of the resolved location (Leaflet + OpenStreetMap tiles, lazy-
   loaded) with toggleable jurisdiction boundary overlays: TIGERweb for

@@ -1,27 +1,58 @@
+import { useState } from 'react'
 import { formatDate } from '../lib/format'
 import type { Representative } from '../lib/types'
 
+/** "Muriel Bowser" → "MB"; single names keep their first letter. */
+export function initials(name: string): string {
+  const words = name
+    .split(/\s+/)
+    .filter((w) => /^[A-Za-z]/.test(w) && !/^\(/.test(w))
+  if (words.length === 0) return '?'
+  const first = words[0][0]
+  const last = words.length > 1 ? words[words.length - 1][0] : ''
+  return (first + last).toUpperCase()
+}
+
+/** Party → color class. Anything not clearly D/R renders neutral. */
+export function partyClass(party?: string): string {
+  if (!party) return ''
+  if (/democrat/i.test(party)) return 'party-d'
+  if (/republican/i.test(party)) return 'party-r'
+  return 'party-i'
+}
+
 export function RepCard({ rep }: { rep: Representative }) {
   const isIsoDate = rep.nextElection && /^\d{4}-\d{2}-\d{2}$/.test(rep.nextElection)
+  const [photoBroken, setPhotoBroken] = useState(false)
   return (
     <article className="rep-card">
-      {rep.photoUrl && (
+      {rep.photoUrl && !photoBroken ? (
         <img
           className="rep-photo"
           src={rep.photoUrl}
           alt=""
           loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none'
-          }}
+          onError={() => setPhotoBroken(true)}
         />
+      ) : (
+        <span className={`rep-avatar level-${rep.level}`} aria-hidden="true">
+          {initials(rep.name)}
+        </span>
       )}
       <div className="rep-body">
         <h3>{rep.name}</h3>
         <p className="rep-office">
           {rep.office}
           {rep.jurisdiction ? ` · ${rep.jurisdiction}` : ''}
-          {rep.party ? ` · ${rep.party}` : ''}
+          {rep.party && (
+            <>
+              {' '}
+              <span className={`party-badge ${partyClass(rep.party)}`}>
+                <span className="party-dot" aria-hidden="true" />
+                {rep.party}
+              </span>
+            </>
+          )}
         </p>
         {(rep.termStart || rep.termEnd) && (
           <p>
@@ -37,25 +68,31 @@ export function RepCard({ rep }: { rep: Representative }) {
         <ul className="contact-list">
           {rep.phone && (
             <li>
-              <a href={`tel:${rep.phone}`}>{rep.phone}</a>
+              <a href={`tel:${rep.phone}`}>
+                <span aria-hidden="true">☎ </span>
+                {rep.phone}
+              </a>
             </li>
           )}
           {rep.email && (
             <li>
-              <a href={`mailto:${rep.email}`}>{rep.email}</a>
+              <a href={`mailto:${rep.email}`}>
+                <span aria-hidden="true">✉ </span>
+                {rep.email}
+              </a>
             </li>
           )}
           {rep.website && (
             <li>
               <a href={rep.website} target="_blank" rel="noreferrer">
-                Website
+                <span aria-hidden="true">🌐 </span>Website
               </a>
             </li>
           )}
           {rep.contactForm && (
             <li>
               <a href={rep.contactForm} target="_blank" rel="noreferrer">
-                Contact form
+                <span aria-hidden="true">📝 </span>Contact form
               </a>
             </li>
           )}

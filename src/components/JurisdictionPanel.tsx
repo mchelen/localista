@@ -1,9 +1,13 @@
+import { SECTIONS } from '../lib/sections'
 import type { GeoContext } from '../lib/types'
+import { PanelHeading } from './Panel'
 
 export function JurisdictionPanel({ geo }: { geo: GeoContext }) {
   return (
-    <section className="panel">
-      <h2>Where you are</h2>
+    <section className="panel" id={SECTIONS.where.id}>
+      <PanelHeading icon={SECTIONS.where.icon} tint={SECTIONS.where.tint}>
+        Where you are
+      </PanelHeading>
       {geo.matchedAddress && <p className="muted">{geo.matchedAddress}</p>}
       <dl className="jurisdiction-list">
         {geo.jurisdictions.map((j) => (

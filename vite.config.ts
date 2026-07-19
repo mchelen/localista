@@ -61,6 +61,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // No SPA navigation fallback: the site is multi-page now (real
+        // /help/, /faq/… URLs). The plugin's default (index.html) would
+        // make the service worker hijack every content-page navigation
+        // and render the app instead. Offline, content pages come from
+        // the NetworkFirst cache below after first visit.
+        navigateFallback: null,
         // Content pages are served network-first (below), not precached:
         // CI may republish fresh content pages alongside a carried-forward
         // app (broken-build fallback), and a stale precache would mask
