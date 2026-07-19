@@ -1,5 +1,8 @@
+import { dcElectedExecutives, dcResources } from '../data/dcCurated'
+import { NATIONAL_RESOURCES } from './local'
 import type {
   Bill,
+  CivicResource,
   ElectionInfo,
   GeoContext,
   JurisdictionDemographics,
@@ -42,6 +45,8 @@ export const demoGeo: GeoContext = {
 }
 
 export const demoReps: Representative[] = [
+  // Citywide elected executives (curated data doubles as demo data).
+  ...dcElectedExecutives,
   {
     level: 'federal',
     office: 'Delegate to the U.S. House (non-voting)',
@@ -57,7 +62,7 @@ export const demoReps: Representative[] = [
   },
   {
     level: 'state',
-    office: 'Councilmember, Ward 6',
+    office: 'DC Councilmember',
     name: 'Charles Allen',
     party: 'Democrat',
     jurisdiction: 'Ward 6',
@@ -113,6 +118,8 @@ export const demoElections: ElectionInfo[] = [
     source: SOURCE
   }
 ]
+
+export const demoResources: CivicResource[] = [...dcResources, ...NATIONAL_RESOURCES]
 
 export const demoDemographics: JurisdictionDemographics[] = [
   {

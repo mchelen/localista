@@ -44,6 +44,26 @@ export interface GeoContext {
 
 export type RepLevel = 'federal' | 'state' | 'local'
 
+/** A top official/agency within an elected official's administration
+ * (drill-down, UX_DESIGN.md §3). Prefer stable offices+links over names. */
+export interface AdministrationEntry {
+  title: string
+  name?: string
+  website?: string
+  phone?: string
+}
+
+/** A task-oriented civic service link (UX_DESIGN.md §4). */
+export interface CivicResource {
+  label: string
+  /** "Use this when…" one-liner. */
+  description?: string
+  url: string
+  phone?: string
+  jurisdiction?: string // "Washington, DC", "United States"
+  source?: string
+}
+
 export interface Representative {
   level: RepLevel
   office: string // "U.S. Senator", "ANC Commissioner"…
@@ -61,6 +81,8 @@ export interface Representative {
   photoUrl?: string
   /** ISO date or human description of the seat's next regular election. */
   nextElection?: string
+  /** Drill-down: top officials/agencies of this official's administration. */
+  administration?: AdministrationEntry[]
   source: string
 }
 

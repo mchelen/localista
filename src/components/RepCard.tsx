@@ -60,6 +60,33 @@ export function RepCard({ rep }: { rep: Representative }) {
             </li>
           )}
         </ul>
+        {rep.administration && rep.administration.length > 0 && (
+          <details className="admin-details">
+            <summary>Administration &amp; key agencies</summary>
+            <ul className="admin-list">
+              {rep.administration.map((a) => (
+                <li key={a.title}>
+                  <span className="admin-title">
+                    {a.website ? (
+                      <a href={a.website} target="_blank" rel="noreferrer">
+                        {a.title} <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      a.title
+                    )}
+                  </span>
+                  {a.name && <span className="admin-name"> — {a.name}</span>}
+                  {a.phone && (
+                    <span className="admin-phone">
+                      {' '}
+                      · <a href={`tel:${a.phone}`}>{a.phone}</a>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
         <p className="source">Source: {rep.source}</p>
       </div>
     </article>

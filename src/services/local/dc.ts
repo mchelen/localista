@@ -1,3 +1,4 @@
+import { dcElectedExecutives, dcResources } from '../../data/dcCurated'
 import { pickAttribute, pickLayer, type ArcGisLayerRef } from '../../lib/arcgis'
 import { normalizeDistrict } from '../../lib/districts'
 import type { DcLocalFile } from '../../lib/staticShapes'
@@ -46,19 +47,27 @@ async function queryPoint(
 const NAME_LIKE = [/^name$/i, /_?name$/i, /^label/i]
 
 async function fetchDc(point: LatLng): Promise<LocalCivicData> {
-  const layers = await listLayers()
-  const wardLayer = pickLayer(layers, /\bwards?\b/i)
-  const ancLayer = pickLayer(layers, /advisory neighborhood/i)
-  const smdLayer = pickLayer(layers, /single member/i)
-
-  const [ward, anc, smd] = await Promise.all([
-    wardLayer ? queryPoint(wardLayer.id, point) : Promise.resolve(undefined),
-    ancLayer ? queryPoint(ancLayer.id, point) : Promise.resolve(undefined),
-    smdLayer ? queryPoint(smdLayer.id, point) : Promise.resolve(undefined)
-  ])
-
   const jurisdictions: Jurisdiction[] = []
-  const representatives: Representative[] = []
+  // Curated citywide officials and services don't depend on the boundary
+  // lookups — a DC GIS outage must not take them down.
+  const representatives: Representative[] = [...dcElectedExecutives]
+
+  let ward: Record<string, unknown> | undefined
+  let anc: Record<string, unknown> | undefined
+  let smd: Record<string, unknown> | undefined
+  try {
+    const layers = await listLayers()
+    const wardLayer = pickLayer(layers, /\bwards?\b/i)
+    const ancLayer = pickLayer(layers, /advisory neighborhood/i)
+    const smdLayer = pickLayer(layers, /single member/i)
+    ;[ward, anc, smd] = await Promise.all([
+      wardLayer ? queryPoint(wardLayer.id, point) : Promise.resolve(undefined),
+      ancLayer ? queryPoint(ancLayer.id, point) : Promise.resolve(undefined),
+      smdLayer ? queryPoint(smdLayer.id, point) : Promise.resolve(undefined)
+    ])
+  } catch {
+    return { jurisdictions, representatives, resources: dcResources }
+  }
 
   if (ward) {
     const name =
@@ -118,7 +127,7 @@ async function fetchDc(point: LatLng): Promise<LocalCivicData> {
     }
   }
 
-  return { jurisdictions, representatives }
+  return { jurisdictions, representatives, resources: dcResources }
 }
 
 export const dcProvider: LocalProvider = {

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import type {
   Bill,
+  CivicResource,
   ElectionInfo,
   GeoContext,
   JurisdictionDemographics,
@@ -14,13 +15,14 @@ import {
   demoDemographics,
   demoElections,
   demoGeo,
-  demoReps
+  demoReps,
+  demoResources
 } from '../services/demo'
 import { getDemographics } from '../services/demographics'
 import { getElections } from '../services/elections'
 import { getFederalReps } from '../services/federal'
 import { geocodeAddress, resolveJurisdictions } from '../services/geocode'
-import { findLocalProvider } from '../services/local'
+import { findLocalProvider, NATIONAL_RESOURCES } from '../services/local'
 import { getStateBills } from '../services/openstates'
 import { getStateRepsSmart } from '../services/stateReps'
 
@@ -32,6 +34,7 @@ export interface LocalistaState {
   bills: Loadable<Bill[]>
   elections: Loadable<ElectionInfo[]>
   demographics: Loadable<JurisdictionDemographics[]>
+  resources: Loadable<CivicResource[]>
 }
 
 const initial: LocalistaState = {
@@ -39,7 +42,8 @@ const initial: LocalistaState = {
   reps: { status: 'idle' },
   bills: { status: 'idle' },
   elections: { status: 'idle' },
-  demographics: { status: 'idle' }
+  demographics: { status: 'idle' },
+  resources: { status: 'idle' }
 }
 
 function message(err: unknown): string {
@@ -77,13 +81,16 @@ export function useLocalista() {
       reps: { status: 'loading' },
       bills: { status: 'loading' },
       elections: { status: 'loading' },
-      demographics: { status: 'loading' }
+      demographics: { status: 'loading' },
+      resources: { status: 'loading' }
     })
 
     const now = new Date()
     const localPromise = (async () => {
       const provider = findLocalProvider(geo)
-      return provider ? provider.fetch(point, geo) : { jurisdictions: [], representatives: [] }
+      return provider
+        ? provider.fetch(point, geo)
+        : { jurisdictions: [], representatives: [], resources: [] }
     })()
 
     // Local jurisdictions (e.g. DC ward/ANC) merge into the "where you are"
@@ -163,7 +170,14 @@ export function useLocalista() {
                 }
               : { status: 'ready', data: [] },
       elections: toLoadable(elections),
-      demographics: toLoadable(demographics)
+      demographics: toLoadable(demographics),
+      resources: {
+        status: 'ready',
+        data: [
+          ...(local.status === 'fulfilled' ? local.value.resources : []),
+          ...NATIONAL_RESOURCES
+        ]
+      }
     }))
   }, [])
 
@@ -211,7 +225,8 @@ export function useLocalista() {
       reps: { status: 'ready', data: demoReps },
       bills: { status: 'ready', data: demoBills },
       elections: { status: 'ready', data: demoElections },
-      demographics: { status: 'ready', data: demoDemographics }
+      demographics: { status: 'ready', data: demoDemographics },
+      resources: { status: 'ready', data: demoResources }
     })
   }, [])
 
