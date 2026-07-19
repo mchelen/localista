@@ -23,6 +23,9 @@ Status: v0.2 (2026-07-18)
 | Upcoming elections (official list) | Google Civic Info `elections` | **Yes** | Yes | `services/elections.ts` |
 | Upcoming elections (computed baseline) | Derived from term-end dates | No | n/a | `services/elections.ts` |
 | Demographics (population, income, age, education, unemployment) | Census ACS 5-year Data Profile | Optional | Yes | `services/demographics.ts` |
+| Boundary polygons (state, county, place, CD, SLDU/SLDL) | Census TIGERweb ArcGIS (`tigerWMS_Current`) | No | Yes | `services/boundaries.ts` |
+| Boundary polygons (DC ward / ANC / SMD) | DC GIS ArcGIS (maps2.dcgis.dc.gov) | No | Yes | `services/boundaries.ts` |
+| Map tiles | OpenStreetMap raster tiles (tile.openstreetmap.org) | No | Yes | `components/MapPanel.tsx` |
 | DC ward / ANC / SMD + ANC commissioner | DC Open Data (ArcGIS REST, `maps2.dcgis.dc.gov`) | No | Yes | `services/local/dc.ts` |
 
 Free key signup:

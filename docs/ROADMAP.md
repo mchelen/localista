@@ -42,6 +42,9 @@
 - Real PNG icons + richer install experience; Lighthouse PWA pass
 
 ## Phase 2 — Depth
+- ✅ Map of the resolved location (Leaflet + OpenStreetMap tiles, lazy-
+  loaded) with toggleable jurisdiction boundary overlays: TIGERweb for
+  state/county/place/CD/state-legislative, DC GIS for ward/ANC/SMD
 - Governor + statewide executives (openstates/people `executive/` dir —
   pipeline already downloads it)
 - Bills filtered to *your* legislators' sponsorships; bill search

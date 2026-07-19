@@ -4,6 +4,7 @@ import { DemographicsPanel } from '../components/DemographicsPanel'
 import { ElectionsPanel } from '../components/ElectionsPanel'
 import { JurisdictionPanel } from '../components/JurisdictionPanel'
 import { LocationBar } from '../components/LocationBar'
+import { MapPanel } from '../components/MapPanel'
 import { RepsPanel } from '../components/RepsPanel'
 import { useLocalista } from '../hooks/useLocalista'
 import { DEMO_LABEL } from '../services/demo'
@@ -52,6 +53,7 @@ export function HomePage() {
         {showResults && state.geo && (
           <>
             <JurisdictionPanel geo={state.geo} />
+            <MapPanel geo={state.geo} />
             <RepsPanel state={state.reps} />
             <BillsPanel state={state.bills} />
             <ElectionsPanel state={state.elections} />

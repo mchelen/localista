@@ -63,8 +63,9 @@ export function SiteChrome({
         {footerExtra}
         <p>
           Data: U.S. Census Bureau · unitedstates/congress-legislators · DC Open Data ·
-          Open States · Congress.gov · Google Civic Information. Your location is sent
-          only to these providers to answer your query, and never stored by Localista.
+          Open States · Congress.gov · Google Civic Information · OpenStreetMap (map
+          tiles). Your location is sent only to these providers to answer your query,
+          and never stored by Localista.
         </p>
         <p>
           <a href={pageHref('blog/')}>Why Localista</a> ·{' '}

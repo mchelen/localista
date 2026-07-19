@@ -110,8 +110,19 @@ export default defineConfig({
             }
           },
           {
+            // OSM raster tiles for the map: cache-first — tiles are
+            // immutable enough and this keeps repeat pans/zooms light on
+            // the volunteer-run tile servers.
+            urlPattern: /^https:\/\/tile\.openstreetmap\.org\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'osm-tiles',
+              expiration: { maxEntries: 256, maxAgeSeconds: 60 * 60 * 24 * 14 }
+            }
+          },
+          {
             urlPattern:
-              /^https:\/\/(geocoding\.geo\.census\.gov|api\.census\.gov|maps2\.dcgis\.dc\.gov|v3\.openstates\.org|api\.congress\.gov|www\.googleapis\.com)\//,
+              /^https:\/\/(geocoding\.geo\.census\.gov|api\.census\.gov|tigerweb\.geo\.census\.gov|maps2\.dcgis\.dc\.gov|v3\.openstates\.org|api\.congress\.gov|www\.googleapis\.com)\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'civic-data',

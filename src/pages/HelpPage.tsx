@@ -36,6 +36,13 @@ export function HelpPage() {
           Single Member District.
         </li>
         <li>
+          <strong>Map</strong> — your location on an OpenStreetMap map with your
+          district boundaries outlined (city, congressional district, and — in DC —
+          ward and Single Member District by default). Use the legend checkboxes to
+          show or hide each boundary, including state, county, and state
+          legislative districts.
+        </li>
+        <li>
           <strong>Your elected representatives</strong> — grouped Federal / State /
           Hyperlocal. Each card shows the office and district, party, current term
           dates, next election for the seat, and contact links (phone, email,

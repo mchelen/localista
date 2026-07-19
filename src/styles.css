@@ -758,3 +758,41 @@ a {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Map panel */
+.map-canvas {
+  height: 320px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #e2e8f0;
+  z-index: 0; /* contain Leaflet’s high-z-index panes within the panel */
+}
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  border: none;
+}
+.map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.map-legend-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 3px;
+  display: inline-block;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

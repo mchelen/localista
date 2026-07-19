@@ -6,6 +6,8 @@ your current location (or a typed address) to show:
 - **Where you are** — your full civic address: state, county, city,
   congressional district, state legislative districts, and in DC your ward,
   ANC, and Single Member District.
+- **A map of your location** (OpenStreetMap) with toggleable jurisdiction
+  boundary outlines (Census TIGERweb; DC GIS for ward/ANC/SMD).
 - **Your elected representatives** — federal, state, and hyperlocal (DC ANC
   commissioners), with current term, contact info, and each seat's next
   election.

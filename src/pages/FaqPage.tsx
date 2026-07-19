@@ -13,7 +13,7 @@ const FAQS: Faq[] = [
   },
   {
     q: 'Do you store my location?',
-    a: 'No. Your location (or typed address) is used once, inside your browser, to query public geocoding services, and is never stored. Localista has no server of its own and no analytics, so there is nothing for us to keep.'
+    a: 'No. Your location (or typed address) is used once, inside your browser, to query public geocoding and boundary services, and is never stored. The map is drawn with OpenStreetMap tiles, so the tile servers see the map area you view — never your exact point, which stays in your browser. Localista has no server of its own and no analytics, so there is nothing for us to keep.'
   },
   {
     q: 'Where does the data come from?',
