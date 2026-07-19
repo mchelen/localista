@@ -1,10 +1,11 @@
+import { pageHref } from '../components/SiteChrome'
 export function HelpPage() {
   return (
     <article className="page">
       <h2>Help guide</h2>
       <p>
         Everything you need to use Localista. For the story behind the app and a
-        step-by-step visual tour, see the <a href="#/blog">introduction</a>.
+        step-by-step visual tour, see the <a href={pageHref('blog/')}>introduction</a>.
       </p>
 
       <h3>Getting started</h3>
@@ -117,7 +118,7 @@ export function HelpPage() {
         sent only to the public geocoding services needed to answer your question
         (U.S. Census Bureau; in DC, the city’s open-data service), then discarded.
         Nothing you look up is recorded by Localista. Full details in{' '}
-        <a href="#/about">About</a> and the <a href="#/faq">FAQ</a>.
+        <a href={pageHref('about/')}>About</a> and the <a href={pageHref('faq/')}>FAQ</a>.
       </p>
     </article>
   )

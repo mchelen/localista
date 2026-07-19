@@ -1,3 +1,4 @@
+import { pageHref } from '../components/SiteChrome'
 import type { ReactNode } from 'react'
 
 interface Faq {
@@ -60,7 +61,7 @@ const FAQS: Faq[] = [
       <>
         Open an issue or pull request on the project’s GitHub repository — data
         corrections, new city providers, and translations are all fair game. See{' '}
-        <a href="#/about">About</a> for the project’s principles.
+        <a href={pageHref('about/')}>About</a> for the project’s principles.
       </>
     )
   }

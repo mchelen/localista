@@ -2,6 +2,24 @@
 # deploys both to GitHub Pages. Runs on push to main, on a daily schedule
 # (data refresh), and on demand.
 #
+# POSTURE: best-effort, always-publish. Strict merge-blocking checks live
+# in ci.yml; this workflow's job is to keep the site live and as fresh as
+# possible no matter what. Layered fallbacks, in order:
+#   1. Normal: typecheck + full build (app + content pages) — fresh site.
+#   2. Typecheck broke but the bundler still works (`vite build` without
+#      tsc): still a fully fresh site.
+#   3. App build is truly broken: carry forward the last successful run's
+#      site artifact and overlay FRESHLY BUILT content pages (help, FAQ,
+#      about, blog are standalone entries — vite.content.config.ts — that
+#      compile without app code). Content updates publish even while the
+#      app is broken; the app stays last-known-good.
+#   4. Even the content build is broken: republish the carried-forward
+#      site unchanged.
+# Independently, data pipeline failures carry forward last-known-good
+# data (pipeline/run.ts) and test failures warn — neither blocks deploys.
+# In every degraded tier ci.yml turns red on the same commit; that is the
+# broken-build signal, deploys are not.
+#
 # One-time repo setup: none required — the configure-pages step below
 # enables GitHub Pages automatically on first run. (Manual equivalent:
 # Settings → Pages → Build and deployment → Source: "GitHub Actions",
@@ -9,9 +27,6 @@
 # Optional secrets (Settings → Secrets → Actions) to unlock keyed datasets:
 #   OPENSTATES_API_KEY, CONGRESS_GOV_API_KEY, GOOGLE_CIVIC_API_KEY,
 #   CENSUS_API_KEY. Keys stay in CI — they are never in the client bundle.
-#
-# If a pipeline job fails validation, the workflow fails and the previous
-# deployment (with its last-known-good data) stays live.
 name: Build and deploy
 
 on:
@@ -25,6 +40,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read # to download the previous run's site artifact (carry-forward)
 
 concurrency:
   group: pages
@@ -40,7 +56,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      # Tests are the merge gate in ci.yml; here they only warn. A commit
+      # that lands on main with failing tests shouldn't stop the daily
+      # data refresh from publishing.
+      - name: Unit tests (non-blocking here; ci.yml is the gate)
+        id: test
+        continue-on-error: true
+        run: npm test
+      - name: Warn on test failure
+        if: steps.test.outcome == 'failure'
+        run: >
+          echo "::warning title=Tests failed on main::Deploy continues
+          (best-effort policy); see ci.yml's run for the blocking signal."
       # continue-on-error: on user-account repos GitHub refuses to let the
       # workflow token CREATE the Pages site ("Resource not accessible by
       # integration") until Pages is enabled once in Settings. Don't let
@@ -52,6 +79,7 @@ jobs:
           enablement: true
         continue-on-error: true
       - name: Compile static civic data
+        continue-on-error: true
         env:
           OPENSTATES_API_KEY: ${{ secrets.OPENSTATES_API_KEY }}
           CONGRESS_GOV_API_KEY: ${{ secrets.CONGRESS_GOV_API_KEY }}
@@ -60,15 +88,73 @@ jobs:
           # Where the currently deployed data lives (carry-forward source).
           PREVIOUS_DATA_URL: ${{ steps.pages.outputs.base_url }}
         run: npm run pipeline
-      - name: Build app
+
+      # ---- Tier 1: normal build (typecheck + app + content pages) ------
+      - name: Build site
+        id: appbuild
+        continue-on-error: true
         env:
           # Serve path assigned by Pages (handles custom domains and
           # project paths alike), e.g. "/localista/" or "/".
           BASE_PATH: ${{ steps.pages.outputs.base_path }}/
         run: npm run build
+
+      # ---- Tier 2: typecheck failed; the bundler may still succeed -----
+      - name: 'Fallback: build without typecheck'
+        id: buildnotc
+        if: steps.appbuild.outcome != 'success'
+        continue-on-error: true
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+        run: |
+          echo "::warning title=Typecheck failed on main::Publishing a fresh site built without typecheck. Fix main — ci.yml is red on this commit."
+          rm -rf dist
+          npx vite build
+
+      # ---- Tier 3: app build broken; carry forward last-good site and --
+      # ---- overlay freshly built content pages -------------------------
+      - name: 'Fallback: fetch last-known-good site'
+        id: carry
+        if: steps.appbuild.outcome != 'success' && steps.buildnotc.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "::warning title=App build failed on main::Republishing the last-known-good site so the deployment stays live. Fix main — ci.yml is red on this commit."
+          found=
+          for id in $(gh run list --workflow "${{ github.workflow }}" \
+              --branch main --status success --limit 15 \
+              --json databaseId --jq '.[].databaseId'); do
+            if gh run download "$id" --name github-pages --dir /tmp/prev-site 2>/dev/null; then
+              found=$id
+              break
+            fi
+          done
+          if [ -z "$found" ]; then
+            echo "::error::No previous successful run still has a github-pages artifact; cannot carry forward. The currently deployed site stays live (the deploy job is skipped)."
+            exit 1
+          fi
+          echo "Carrying forward site artifact from run $found"
+          rm -rf dist && mkdir -p dist
+          tar -xf /tmp/prev-site/artifact.tar -C dist
+      - name: 'Fallback: overlay freshly built content pages'
+        if: steps.carry.outcome == 'success'
+        continue-on-error: true # tier 4: pure carry-forward if this fails too
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+        run: |
+          npm run build:content
+          cp -R dist-content/. dist/
+          echo "::notice title=Content pages republished fresh::Help/FAQ/About/Blog were rebuilt from this commit and overlaid on the carried-forward site."
+
+      # retention-days is raised from the action's 1-day default so tier 3
+      # still has a carry-forward source if main stays broken across
+      # several daily runs.
+      - name: Verify a publishable site exists
+        run: test -f dist/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          retention-days: 14
 
   deploy:
     needs: build

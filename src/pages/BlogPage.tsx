@@ -1,3 +1,4 @@
+import { pageHref } from '../components/SiteChrome'
 import type { ReactNode } from 'react'
 import {
   ScreenAddress,
@@ -181,7 +182,7 @@ export function BlogPage() {
         built almost entirely on open government data compiled into static files —
         there’s no server watching what you look up, and your location never leaves
         your device except to query public geocoders. (More in{' '}
-        <a href="#/about">About</a> and the <a href="#/faq">FAQ</a>.)
+        <a href={pageHref('about/')}>About</a> and the <a href={pageHref('faq/')}>FAQ</a>.)
       </p>
 
       <h3>See it in action: a two-minute tour</h3>
@@ -207,8 +208,8 @@ export function BlogPage() {
       </ol>
 
       <p className="cta">
-        That’s it — <a href="#/">try it with your own location</a>, or start with the
-        demo. If something looks wrong for your area, the <a href="#/faq">FAQ</a>{' '}
+        That’s it — <a href={pageHref('')}>try it with your own location</a>, or start with the
+        demo. If something looks wrong for your area, the <a href={pageHref('faq/')}>FAQ</a>{' '}
         explains how the data works and how to report it.
       </p>
     </article>

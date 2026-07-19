@@ -1,0 +1,57 @@
+# Strict, merge-blocking checks. Runs on every pull request (and on push
+# to main, so the badge/history reflects main's health). A breaking code
+# change — failing tests, a type error, or a broken production build —
+# fails this workflow and shows a red check on the PR.
+#
+# This is deliberately the OPPOSITE posture of deploy.yml: deploy.yml is
+# best-effort (the site must always publish), ci.yml is strict (broken
+# code must always be flagged). To make it actually merge-blocking, add
+# the "check" job to the required status checks for main:
+# Settings → Branches → Branch protection rules → main → Require status
+# checks to pass → select "CI / check".
+#
+# Everything here is deterministic (no API keys, no dependence on civic
+# APIs being up) except the final "pipeline probe" step, which exercises
+# the two key-free pipeline jobs against live endpoints to catch upstream
+# shape drift early. Because upstream outages shouldn't block unrelated
+# PRs, that one step is continue-on-error: it annotates a warning instead
+# of failing the check.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Typecheck + production build
+        run: npm run build
+      - name: Pipeline probe (key-free jobs, live endpoints — non-blocking)
+        id: probe
+        continue-on-error: true
+        run: npm run pipeline -- --strict --only=federal,dcLocal
+      - name: Warn on probe failure
+        if: steps.probe.outcome == 'failure'
+        run: >
+          echo "::warning title=Pipeline probe failed::An upstream civic
+          API may be down or its response shape may have drifted. This does
+          not block the PR; see the probe step's log. Deploys carry forward
+          last-known-good data regardless."

@@ -49,11 +49,28 @@ The app reads `/data/` first and falls back to live APIs. Everything works
 with **zero API keys**; for local development against live APIs you can
 still `cp .env.example .env.local` and add keys.
 
+CI is split into two workflows with opposite postures:
+
+- **`ci.yml` — strict, merge-blocking.** Runs tests, typecheck, and the
+  production build on every PR (and push to `main`); a breaking code
+  change fails the check. Make it required via branch protection on
+  `main` (required status check: `CI / check`).
+- **`deploy.yml` — best-effort, always-publish.** Data failures carry
+  forward last-known-good data and test failures only warn. If the app
+  build breaks on `main`, layered fallbacks kick in: retry without
+  typecheck; failing that, carry forward the last-known-good site and
+  overlay **freshly built content pages** — help, FAQ, about, and blog
+  are standalone static entries (real URLs like `/help/`, built by
+  `vite.content.config.ts` without any app code), so doc edits publish
+  even while the app is broken; failing even that, republish the
+  carried-forward site unchanged. The deployed site never goes down
+  because of a bad commit.
+
 **One-time repo setup for deployment:**
-1. Install the workflow: copy [`docs/ci/deploy.yml`](docs/ci/deploy.yml)
-   to `.github/workflows/deploy.yml` and commit. (It lives in `docs/ci/`
-   because the automation that authored this branch isn't permitted to
-   push workflow files.)
+1. Install the workflows: copy [`docs/ci/deploy.yml`](docs/ci/deploy.yml)
+   and [`docs/ci/ci.yml`](docs/ci/ci.yml) to `.github/workflows/` and
+   commit. (They live in `docs/ci/` because the automation that authored
+   this branch isn't permitted to push workflow files.)
 2. Settings → Pages → Build and deployment → Source: **GitHub Actions**.
 3. Add Actions secrets: `CENSUS_API_KEY` (effectively required — shared CI
    runner IPs exceed the Census keyless quota, so the demographics job

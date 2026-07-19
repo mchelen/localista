@@ -1,3 +1,4 @@
+import { pageHref } from '../components/SiteChrome'
 export function AboutPage() {
   return (
     <article className="page">
@@ -61,8 +62,8 @@ export function AboutPage() {
       <p>
         Localista is developed in the open on GitHub — issues and pull requests are
         the best way to report data problems, request features, or add a provider
-        for your city. See also the <a href="#/help">help guide</a>, the{' '}
-        <a href="#/faq">FAQ</a>, and the <a href="#/blog">introduction post</a>.
+        for your city. See also the <a href={pageHref('help/')}>help guide</a>, the{' '}
+        <a href={pageHref('faq/')}>FAQ</a>, and the <a href={pageHref('blog/')}>introduction post</a>.
       </p>
 
       <p className="muted">

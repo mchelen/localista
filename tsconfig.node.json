@@ -16,6 +16,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["vite.config.ts", "pipeline", "src/lib"],
+  "include": ["vite.config.ts", "vite.content.config.ts", "pipeline", "src/lib"],
   "exclude": ["**/*.test.ts"]
 }
