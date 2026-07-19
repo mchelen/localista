@@ -55,9 +55,12 @@ still `cp .env.example .env.local` and add keys.
    because the automation that authored this branch isn't permitted to
    push workflow files.)
 2. Settings → Pages → Build and deployment → Source: **GitHub Actions**.
-3. (Optional) Add Actions secrets `OPENSTATES_API_KEY`,
-   `CONGRESS_GOV_API_KEY`, `GOOGLE_CIVIC_API_KEY`, `CENSUS_API_KEY` to
-   unlock bill/election snapshots.
+3. Add Actions secrets: `CENSUS_API_KEY` (effectively required — shared CI
+   runner IPs exceed the Census keyless quota, so the demographics job
+   skips without it; free instant signup at
+   https://api.census.gov/data/key_signup.html), plus optionally
+   `OPENSTATES_API_KEY`, `CONGRESS_GOV_API_KEY`, `GOOGLE_CIVIC_API_KEY`
+   for bill/election snapshots.
 
 ## Documentation
 
