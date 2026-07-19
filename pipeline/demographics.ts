@@ -68,6 +68,7 @@ export async function compileDemographics(): Promise<JobResult> {
   const get = `get=NAME,${ids.join(',')}`
   let statesWritten = 0
   let failed = 0
+  let keyDemanded = 0
   let firstError: string | undefined
 
   for (const fips of Object.keys(STATES_BY_FIPS)) {
@@ -102,9 +103,22 @@ export async function compileDemographics(): Promise<JobResult> {
       // Some territories lack ACS profile coverage — a few failures are
       // expected; the validation gate catches systemic ones.
       failed++
-      firstError ??= `state ${fips}: ${err instanceof Error ? err.message : String(err)}`
+      const message = err instanceof Error ? err.message : String(err)
+      if (/missing key/i.test(message)) keyDemanded++
+      firstError ??= `state ${fips}: ${message}`
     }
     await sleep(150)
+  }
+
+  // Keyless Census access is quota'd per IP; shared CI runner IPs exceed it,
+  // so the API demands a key there. Skip cleanly rather than fail the run —
+  // the app's live-API fallback still serves demographics to browsers.
+  if (!key && keyDemanded > 40) {
+    return {
+      status: 'skipped',
+      reason:
+        'Census API requires a key from this IP (shared CI runners exceed the keyless quota). Add the CENSUS_API_KEY secret — free instant signup at https://api.census.gov/data/key_signup.html'
+    }
   }
 
   if (statesWritten < 50) {
