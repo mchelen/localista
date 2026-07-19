@@ -13,10 +13,29 @@ export function env(name: string): string | undefined {
   return v && v.trim() !== '' ? v.trim() : undefined
 }
 
+// Files written per dataset, recorded into meta.json so a later run can
+// carry forward a failed dataset's last-known-good files from the
+// previously deployed site.
+let currentDataset: string | undefined
+const filesByDataset = new Map<string, string[]>()
+
+export function setCurrentDataset(name: string | undefined): void {
+  currentDataset = name
+}
+
+export function filesForDataset(name: string): string[] {
+  return filesByDataset.get(name) ?? []
+}
+
 export async function writeJson(relPath: string, data: unknown): Promise<void> {
   const file = path.join(OUT_DIR, relPath)
   await mkdir(path.dirname(file), { recursive: true })
   await writeFile(file, JSON.stringify(data))
+  if (currentDataset) {
+    const list = filesByDataset.get(currentDataset) ?? []
+    list.push(relPath)
+    filesByDataset.set(currentDataset, list)
+  }
 }
 
 export const sleep = (ms: number): Promise<void> =>

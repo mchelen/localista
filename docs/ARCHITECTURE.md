@@ -126,10 +126,16 @@ Design points:
   District 21" ≡ "21"; DC "Ward 6" ≡ "6"); values are arrays because some
   states have multi-member districts. The same module runs at build time
   (writer) and runtime (reader).
-- **Validation gates**: each job asserts sanity (≥500 members of Congress,
-  ≥7000 state legislators, ≥50 states of demographics, ≥250 DC SMDs). A
-  failed job fails CI, so the previous good deployment stays live —
-  upstream breakage becomes a red workflow, not a broken panel.
+- **Validation gates, best-effort delivery**: each job asserts sanity
+  (≥500 members of Congress, ≥7000 state legislators, ≥50 states of
+  demographics, ≥250 DC SMDs), so bad upstream data is never written. But
+  a failed dataset must never block the site itself (the app shell, help,
+  docs, and demo mode work with zero data): the run carries forward the
+  dataset's last-known-good files from the previously deployed site
+  (`meta.json` records each dataset's file list), or ships without them —
+  the affected panel falls back to live APIs or an explanatory note. Data
+  failures surface as Actions warning annotations, not red builds
+  (`--strict` restores fail-fast for local debugging).
 - **Keys live only in CI secrets** (`OPENSTATES_API_KEY`,
   `CONGRESS_GOV_API_KEY`, `GOOGLE_CIVIC_API_KEY`, `CENSUS_API_KEY`); keyed
   jobs skip cleanly when unset. The Vite `VITE_*` client-key path still
